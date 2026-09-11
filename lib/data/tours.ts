@@ -115,6 +115,31 @@ export const TOURS: Tour[] = [
     active: true,
     badge: null,
   },
+  {
+    id: "t5",
+    category_id: "zipline",
+    title_th: "ฮิลล์พาร์ค แอดเวนเจอร์ ซิปไลน์ และโรลเลอร์โคสเตอร์ป่าเขา",
+    title_en: "Hill Park Adventure Zipline & Rollers",
+    slug: "hillpark-zipline-rollers",
+    description_th:
+      "ผจญภัยกลางป่าเขากระบี่ โหนสลิงข้ามหุบเขาชมวิวพาโนรามา เดินสะพานแขวน (สกายบริดจ์) และเล่นเชือกโรยตัว หลายสเตชันตั้งแต่ระดับเริ่มต้นจนถึงสายลุย เหมาะกับทั้งครอบครัว กลุ่มเพื่อน และเดินทางคนเดียว อุปกรณ์เซฟตี้มาตรฐานนำเข้า มีเจ้าหน้าที่ดูแลตลอดกิจกรรม ใกล้แหล่งท่องเที่ยวหลักย่านอ่าวนาง",
+    description_en: null,
+    location: "อ่าวนาง, กระบี่",
+    cover_image: "https://images.unsplash.com/photo-1622396481328-9b1b78cdd9fd?w=800&q=75",
+    duration: "1 วัน",
+    start_time: null,
+    end_time: null,
+    pickup_available: true,
+    pickup_info: "มีบริการรับส่งจากโรงแรมในพื้นที่ (เลือกได้ตอนจอง)",
+    meeting_point: "จุดนัดพบฮิลล์พาร์ค แอดเวนเจอร์ ใกล้อ่าวนาง กระบี่",
+    rating: 5.0,
+    review_count: 0,
+    base_price: 1445,
+    featured: true,
+    popular: true,
+    active: true,
+    badge: "ใหม่",
+  },
 ];
 
 export const POPULAR_TOURS = TOURS.filter((t) => t.popular);
