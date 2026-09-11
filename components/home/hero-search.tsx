@@ -1,8 +1,12 @@
 "use client";
 
 import { MapPin, Calendar, Users, Search } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export function HeroSearch() {
+  const { lang } = useLanguage();
+  const t = (th: string, en: string) => (lang === "en" ? en : th);
+
   return (
     <section className="relative">
       {/* แบนเนอร์เต็มพื้นที่สีเขียว — ขยายภาพให้เต็มกรอบ เห็นภาพครบทุกส่วน (ไม่ครอป) กรอบขนาดเท่าเดิมไม่เปลี่ยน */}
@@ -20,13 +24,13 @@ export function HeroSearch() {
       <div className="container-page relative z-10 -mt-8 sm:-mt-12">
         <div className="max-w-4xl rounded-2xl bg-white p-3 shadow-card">
           <form className="flex flex-col gap-3 md:flex-row md:items-center">
-            <Field icon={<MapPin size={18} />} placeholder="เลือกจุดหมาย / พื้นที่" />
+            <Field icon={<MapPin size={18} />} placeholder={t("เลือกจุดหมาย / พื้นที่", "Destination / area")} />
             <div className="hidden h-8 w-px bg-black/10 md:block" />
-            <Field icon={<Calendar size={18} />} placeholder="เลือกวันที่" />
+            <Field icon={<Calendar size={18} />} placeholder={t("เลือกวันที่", "Select date")} />
             <div className="hidden h-8 w-px bg-black/10 md:block" />
-            <Field icon={<Users size={18} />} placeholder="จำนวนผู้เดินทาง" />
+            <Field icon={<Users size={18} />} placeholder={t("จำนวนผู้เดินทาง", "Travelers")} />
             <button type="submit" className="btn-primary shrink-0 md:w-auto">
-              <Search size={18} /> ค้นหาทัวร์
+              <Search size={18} /> {t("ค้นหาทัวร์", "Search Tours")}
             </button>
           </form>
         </div>

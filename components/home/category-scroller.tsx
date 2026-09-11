@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { CATEGORIES } from "@/lib/data/tours";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export function CategoryScroller() {
   const [active, setActive] = useState(CATEGORIES[0]?.id ?? "");
+  const { lang } = useLanguage();
 
   return (
     <section className="container-page mt-8">
@@ -24,7 +26,7 @@ export function CategoryScroller() {
             >
               {/* ใช้ img ธรรมดาเพื่อความง่ายในการแสดง demo */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={c.image} alt={c.name_th} className="h-full w-full object-cover" />
+              <img src={c.image} alt={lang === "en" ? c.name_en : c.name_th} className="h-full w-full object-cover" />
             </span>
             <span
               className={cn(
@@ -32,7 +34,7 @@ export function CategoryScroller() {
                 active === c.id ? "text-brand-orange" : "text-brand-text/70"
               )}
             >
-              {c.name_th}
+              {lang === "en" ? c.name_en : c.name_th}
             </span>
           </button>
         ))}
