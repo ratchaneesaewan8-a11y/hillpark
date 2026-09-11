@@ -87,10 +87,7 @@ export function TourDetailContent({
                   <div key={pkg.id} className="rounded-xl border border-black/10 p-3">
                     <div className="text-sm font-semibold text-brand-text">{name}</div>
                     <div className="mt-1 text-xs text-brand-text/60">
-                      {t("ผู้ใหญ่", "Adult")} {formatTHB(pkg.adult_price)}
-                      {pkg.child_price > 0 && (
-                        <> · {t("เด็ก", "Child")} {formatTHB(pkg.child_price)}</>
-                      )}
+                      {formatTHB(pkg.adult_price)} {t("/ คน", "/ person")}
                     </div>
                     {pkg.payment_link ? (
                       <a

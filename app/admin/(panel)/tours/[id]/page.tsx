@@ -46,7 +46,7 @@ export default async function EditTourPage({ params }: { params: { id: string } 
               <div>
                 <span className="font-medium">{p.name_th}</span>
                 <span className="ml-3 text-brand-text/60">
-                  ผู้ใหญ่ {formatTHB(p.adult_price)} · เด็ก {formatTHB(p.child_price)} · เด็กเล็ก {formatTHB(p.infant_price)} · รับได้ {p.capacity}
+                  ราคา {formatTHB(p.adult_price)} · รับได้ {p.capacity} คน
                 </span>
                 <div className="mt-1 text-xs">
                   {p.payment_link ? (
@@ -73,22 +73,14 @@ export default async function EditTourPage({ params }: { params: { id: string } 
         <form action={savePackage} className="border-t border-black/5 pt-4">
           <input type="hidden" name="tour_id" value={tour.id} />
 
-          <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70 sm:col-span-3 lg:col-span-1">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
               ชื่อแพ็กเกจ
               <input name="name_th" required placeholder="เช่น แพ็กเกจมาตรฐาน" className="input" />
             </label>
             <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
-              ราคาผู้ใหญ่ (บาท)
+              ราคา (บาท/คน)
               <input name="adult_price" type="number" required placeholder="0" className="input" />
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
-              ราคาเด็ก (บาท)
-              <input name="child_price" type="number" defaultValue={0} className="input" />
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
-              ราคาเด็กเล็ก (บาท)
-              <input name="infant_price" type="number" defaultValue={0} className="input" />
             </label>
             <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
               จำนวนที่รับ (คน/รอบ)
