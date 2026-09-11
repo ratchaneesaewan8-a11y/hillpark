@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseEnv } from "@/lib/admin/auth";
 import { TOURS } from "@/lib/data/tours";
-import type { Tour } from "@/lib/types";
+import type { Tour, Package } from "@/lib/types";
 
 // -----------------------------------------------------------------------------
 // ดึงข้อมูลทัวร์ฝั่ง Storefront (โฮมเพจ / รายการทัวร์ / รายละเอียดทัวร์)
@@ -38,6 +38,22 @@ function normalizeTour(row: Record<string, any>): Tour {
   };
 }
 
+function normalizePackage(row: Record<string, any>): Package {
+  return {
+    id: row.id,
+    tour_id: row.tour_id,
+    name_th: row.name_th,
+    name_en: row.name_en ?? row.name_th,
+    description_th: row.description_th ?? null,
+    adult_price: row.adult_price ?? 0,
+    child_price: row.child_price ?? 0,
+    infant_price: row.infant_price ?? 0,
+    capacity: row.capacity ?? 0,
+    active: row.active ?? true,
+    payment_link: row.payment_link ?? null,
+  };
+}
+
 export async function getAllTours(): Promise<Tour[]> {
   if (!hasSupabaseEnv()) return TOURS;
   try {
@@ -62,10 +78,10 @@ export async function getPopularTours(): Promise<Tour[]> {
 
 export async function getTourBySlug(
   slug: string
-): Promise<{ tour: Tour; gallery: string[] } | null> {
+): Promise<{ tour: Tour; gallery: string[]; packages: Package[] } | null> {
   if (!hasSupabaseEnv()) {
     const demo = TOURS.find((t) => t.slug === slug);
-    return demo ? { tour: demo, gallery: [] } : null;
+    return demo ? { tour: demo, gallery: [], packages: [] } : null;
   }
   try {
     const supabase = createClient();
@@ -78,21 +94,30 @@ export async function getTourBySlug(
 
     if (error || !data) {
       const demo = TOURS.find((t) => t.slug === slug);
-      return demo ? { tour: demo, gallery: [] } : null;
+      return demo ? { tour: demo, gallery: [], packages: [] } : null;
     }
 
-    const { data: images } = await supabase
-      .from("tour_images")
-      .select("image_url")
-      .eq("tour_id", data.id)
-      .order("sort_order", { ascending: true });
+    const [{ data: images }, { data: packages }] = await Promise.all([
+      supabase
+        .from("tour_images")
+        .select("image_url")
+        .eq("tour_id", data.id)
+        .order("sort_order", { ascending: true }),
+      supabase
+        .from("packages")
+        .select("*")
+        .eq("tour_id", data.id)
+        .eq("active", true)
+        .order("adult_price", { ascending: true }),
+    ]);
 
     return {
       tour: normalizeTour(data),
       gallery: (images ?? []).map((i: { image_url: string }) => i.image_url),
+      packages: (packages ?? []).map(normalizePackage),
     };
   } catch {
     const demo = TOURS.find((t) => t.slug === slug);
-    return demo ? { tour: demo, gallery: [] } : null;
+    return demo ? { tour: demo, gallery: [], packages: [] } : null;
   }
 }

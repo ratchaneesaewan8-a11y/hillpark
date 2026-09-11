@@ -1,11 +1,19 @@
 "use client";
 
 import { Star, Clock, MapPin } from "lucide-react";
-import type { Tour } from "@/lib/types";
+import type { Tour, Package } from "@/lib/types";
 import { formatTHB } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/language-context";
 
-export function TourDetailContent({ tour, gallery }: { tour: Tour; gallery: string[] }) {
+export function TourDetailContent({
+  tour,
+  gallery,
+  packages,
+}: {
+  tour: Tour;
+  gallery: string[];
+  packages: Package[];
+}) {
   const { lang } = useLanguage();
   const t = (th: string, en: string) => (lang === "en" ? en : th);
   const title = lang === "en" && tour.title_en ? tour.title_en : tour.title_th;
@@ -70,9 +78,46 @@ export function TourDetailContent({ tour, gallery }: { tour: Tour; gallery: stri
         <div className="sticky top-20 rounded-2xl bg-white p-5 shadow-card">
           <div className="text-sm text-brand-text/50">{t("เริ่มต้น", "From")}</div>
           <div className="text-3xl font-bold text-brand-text">{formatTHB(tour.base_price)}</div>
-          <button className="btn-primary mt-4 w-full">{t("เลือกแพ็กเกจ", "Select Package")}</button>
+
+          {packages.length > 0 ? (
+            <div className="mt-4 space-y-3">
+              {packages.map((pkg) => {
+                const name = lang === "en" && pkg.name_en ? pkg.name_en : pkg.name_th;
+                return (
+                  <div key={pkg.id} className="rounded-xl border border-black/10 p-3">
+                    <div className="text-sm font-semibold text-brand-text">{name}</div>
+                    <div className="mt-1 text-xs text-brand-text/60">
+                      {t("ผู้ใหญ่", "Adult")} {formatTHB(pkg.adult_price)}
+                      {pkg.child_price > 0 && (
+                        <> · {t("เด็ก", "Child")} {formatTHB(pkg.child_price)}</>
+                      )}
+                    </div>
+                    {pkg.payment_link ? (
+                      <a
+                        href={pkg.payment_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-primary mt-3 block w-full text-center"
+                      >
+                        {t("จองเลย", "Book Now")}
+                      </a>
+                    ) : (
+                      <button disabled className="mt-3 w-full cursor-not-allowed rounded-xl bg-black/5 py-2.5 text-sm text-brand-text/40">
+                        {t("เร็วๆ นี้", "Coming soon")}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-brand-text/50">
+              {t("ยังไม่มีแพ็กเกจให้จองในขณะนี้", "No packages available to book yet")}
+            </p>
+          )}
+
           <p className="mt-3 text-center text-xs text-brand-text/50">
-            {t("ยืนยันทันที · ชำระเงินปลอดภัยผ่าน Stripe", "Instant confirmation · Secure payment via Stripe")}
+            {t("ชำระเงินปลอดภัยผ่าน Stripe", "Secure payment via Stripe")}
           </p>
         </div>
       </aside>

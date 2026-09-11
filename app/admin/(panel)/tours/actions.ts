@@ -64,6 +64,7 @@ export async function savePackage(formData: FormData) {
     child_price: Number(formData.get("child_price") || 0),
     infant_price: Number(formData.get("infant_price") || 0),
     capacity: Number(formData.get("capacity") || 0),
+    payment_link: (formData.get("payment_link") as string) || null,
     active: formData.get("active") === "on",
   };
   if (id) {

@@ -48,6 +48,15 @@ export default async function EditTourPage({ params }: { params: { id: string } 
                 <span className="ml-3 text-brand-text/60">
                   ผู้ใหญ่ {formatTHB(p.adult_price)} · เด็ก {formatTHB(p.child_price)} · เด็กเล็ก {formatTHB(p.infant_price)} · รับได้ {p.capacity}
                 </span>
+                <div className="mt-1 text-xs">
+                  {p.payment_link ? (
+                    <a href={p.payment_link} target="_blank" rel="noopener noreferrer" className="text-brand-teal hover:underline">
+                      {p.payment_link}
+                    </a>
+                  ) : (
+                    <span className="text-red-500">ยังไม่ได้ใส่ลิงก์ชำระเงิน (Stripe Payment Link)</span>
+                  )}
+                </div>
               </div>
               <form action={deletePackage}>
                 <input type="hidden" name="id" value={p.id} />
@@ -68,6 +77,12 @@ export default async function EditTourPage({ params }: { params: { id: string } 
           <input name="child_price" type="number" defaultValue={0} placeholder="ราคาเด็ก" className="input" />
           <input name="infant_price" type="number" defaultValue={0} placeholder="ราคาเด็กเล็ก" className="input" />
           <input name="capacity" type="number" defaultValue={0} placeholder="จำนวนที่รับ" className="input" />
+          <input
+            name="payment_link"
+            type="url"
+            placeholder="ลิงก์ Stripe Payment Link (https://buy.stripe.com/...)"
+            className="input sm:col-span-3 lg:col-span-5"
+          />
           <label className="flex items-center gap-2 text-sm text-brand-text/70">
             <input type="checkbox" name="active" defaultChecked /> ใช้งาน
           </label>

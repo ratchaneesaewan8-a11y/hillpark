@@ -46,6 +46,7 @@ export type Package = {
   infant_price: number;
   capacity: number;
   active: boolean;
+  payment_link?: string | null; // ลิงก์ Stripe Payment Link (ใช้แทน API ชั่วคราว)
 };
 
 export type BookingStatus =

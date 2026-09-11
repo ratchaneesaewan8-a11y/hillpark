@@ -8,11 +8,11 @@ import { TourDetailContent } from "@/components/tours/tour-detail-content";
 export default async function TourDetailPage({ params }: { params: { slug: string } }) {
   const result = await getTourBySlug(params.slug);
   if (!result) return notFound();
-  const { tour, gallery } = result;
+  const { tour, gallery, packages } = result;
 
   return (
     <div className="container-page py-8">
-      <TourDetailContent tour={tour} gallery={gallery} />
+      <TourDetailContent tour={tour} gallery={gallery} packages={packages} />
     </div>
   );
 }
