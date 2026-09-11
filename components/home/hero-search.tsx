@@ -5,13 +5,13 @@ import { MapPin, Calendar, Users, Search } from "lucide-react";
 export function HeroSearch() {
   return (
     <section className="relative">
-      {/* แบนเนอร์แสดงเต็มภาพ ไม่ครอป — ลดขนาดลงเหลือ 50% (กว้าง-สูงลดตามสัดส่วนเท่ากัน ไม่ตัดภาพ) */}
-      <div className="flex w-full justify-center bg-brand-green">
+      {/* แบนเนอร์เต็มพื้นที่สีเขียว (ยืดภาพให้เต็มกล่อง ไม่ครอป) — กล่องสูง 20vw เท่ากับขนาดที่เคยแสดงตอน 50% */}
+      <div className="w-full bg-brand-green">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/hero-banner.jpg"
           alt="HILLPARK ADVENTURE — Good Trips, Great Memories"
-          className="block h-auto w-1/2"
+          className="block h-[20vw] w-full object-fill"
           fetchPriority="high"
         />
       </div>
