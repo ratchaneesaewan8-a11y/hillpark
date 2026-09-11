@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HILLPARK Mobile Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --orange:#FF6A00;
+    --green:#09251D;
+    --teal:#08A6A6;
+    --bg:#F6F8F7;
+    --text:#17201D;
+    --card:#ffffff;
+    --muted:#7A857F;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{
+    font-family:'Noto Sans Thai','Poppins',system-ui,sans-serif;
+    background:linear-gradient(160deg,#0d3b30,#08A6A6 60%,#7ec8c0);
+    min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;
+    padding:28px 12px;color:var(--text);
+  }
+  .brandline{color:#fff;text-align:center;margin-bottom:18px;}
+  .brandline h2{font-family:'Poppins';font-weight:800;font-size:19px;letter-spacing:.5px;}
+  .brandline p{font-size:12.5px;opacity:.85;margin-top:3px;}
+
+  /* Phone frame */
+  .phone{
+    width:390px;max-width:100%;
+    background:var(--bg);
+    border-radius:44px;
+    box-shadow:0 30px 70px rgba(0,0,0,.45),0 0 0 12px #10120f,0 0 0 14px #2a2d29;
+    overflow:hidden;position:relative;height:844px;display:flex;flex-direction:column;
+  }
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:150px;height:30px;background:#10120f;border-radius:0 0 18px 18px;z-index:40;}
+  .statusbar{height:46px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 24px 6px;font-size:12px;font-weight:600;flex-shrink:0;background:#fff;}
+  .statusbar .icons{display:flex;gap:6px;align-items:center;}
+
+  /* App header */
+  .appbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:8px 18px 12px;background:#fff;flex-shrink:0;
+  }
+  .logo{display:flex;align-items:center;gap:8px;}
+  .logo .mark{
+    width:40px;height:40px;border-radius:11px;
+    background:linear-gradient(135deg,var(--orange),#ff9142);
+    display:grid;place-items:center;color:#fff;font-family:'Poppins';font-weight:800;font-size:20px;
+    box-shadow:0 4px 12px rgba(255,106,0,.35);
+  }
+  .logo .txt{line-height:1.05;}
+  .logo .txt b{font-family:'Poppins';font-weight:800;font-size:15px;color:var(--green);letter-spacing:.3px;display:block;}
+  .logo .txt span{font-size:10px;color:var(--muted);letter-spacing:1.5px;font-weight:600;}
+  .appbar .actions{display:flex;gap:10px;}
+  .iconbtn{width:40px;height:40px;border-radius:12px;background:#F0F3F1;border:none;display:grid;place-items:center;color:var(--green);cursor:pointer;}
+  .iconbtn.avatar{background:#dfe6e2;overflow:hidden;padding:0;}
+  .iconbtn.avatar img{width:100%;height:100%;object-fit:cover;}
+
+  /* scroll body */
+  .scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:88px;}
+  .scroll::-webkit-scrollbar{display:none;}
+
+  /* Search pill */
+  .searchwrap{padding:6px 18px 4px;}
+  .search{
+    display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e7ecea;
+    border-radius:16px;padding:12px 16px;box-shadow:0 6px 18px rgba(9,37,29,.05);
+  }
+  .search input{border:none;outline:none;flex:1;font-family:inherit;font-size:13.5px;color:var(--text);background:transparent;}
+  .search input::placeholder{color:#9aa5a0;}
+  .search .go{width:32px;height:32px;border-radius:10px;background:var(--orange);display:grid;place-items:center;color:#fff;flex-shrink:0;}
+
+  /* Hero carousel */
+  .herohead{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px;}
+  .herohead h3{font-size:16px;font-weight:700;color:var(--green);}
+  .herohead a{font-size:12.5px;color:var(--orange);font-weight:600;text-decoration:none;}
+  .carousel{display:flex;gap:12px;overflow-x:auto;padding:0 18px 6px;scroll-snap-type:x mandatory;}
+  .carousel::-webkit-scrollbar{display:none;}
+  .heroCard{
+    position:relative;flex:0 0 86%;scroll-snap-align:center;
+    border-radius:22px;overflow:hidden;height:210px;
+    box-shadow:0 12px 26px rgba(9,37,29,.2);
+  }
+  .heroCard img{width:100%;height:100%;object-fit:cover;}
+  .heroCard .grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(4,20,15,.86) 8%,rgba(4,20,15,.15) 55%,transparent);}
+  .heroCard .badge{position:absolute;top:12px;left:12px;background:var(--orange);color:#fff;font-size:11px;font-weight:700;padding:5px 11px;border-radius:20px;}
+  .heroCard .fav{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center;color:var(--orange);}
+  .heroCard .info{position:absolute;left:16px;right:16px;bottom:14px;color:#fff;}
+  .heroCard .info h4{font-size:17px;font-weight:700;line-height:1.25;margin-bottom:6px;text-shadow:0 1px 4px rgba(0,0,0,.4);}
+  .heroCard .info .meta{display:flex;align-items:center;gap:12px;font-size:12.5px;font-weight:500;}
+  .heroCard .info .meta .star{color:#FFC531;display:flex;align-items:center;gap:3px;}
+  .dots{display:flex;gap:6px;justify-content:center;padding:12px 0 4px;}
+  .dots i{width:7px;height:7px;border-radius:50%;background:#cdd6d2;transition:.3s;}
+  .dots i.on{width:20px;border-radius:5px;background:var(--orange);}
+
+  /* Category chips */
+  .cats{display:flex;gap:20px;overflow-x:auto;padding:10px 18px 4px;}
+  .cats::-webkit-scrollbar{display:none;}
+  .cat{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:7px;}
+  .cat .ci{width:58px;height:58px;border-radius:50%;overflow:hidden;border:2px solid transparent;box-shadow:0 4px 10px rgba(9,37,29,.08);}
+  .cat.active .ci{border-color:var(--orange);}
+  .cat .ci img{width:100%;height:100%;object-fit:cover;}
+  .cat span{font-size:11px;font-weight:600;color:var(--muted);max-width:66px;text-align:center;line-height:1.2;}
+  .cat.active span{color:var(--orange);}
+
+  /* Grid section */
+  .secthead{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 12px;}
+  .secthead h3{font-size:16px;font-weight:700;color:var(--green);}
+  .secthead a{font-size:12.5px;color:var(--orange);font-weight:600;text-decoration:none;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 18px;}
+  .tcard{background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 8px 20px rgba(9,37,29,.07);display:flex;flex-direction:column;}
+  .tcard .thumb{position:relative;height:110px;}
+  .tcard .thumb img{width:100%;height:100%;object-fit:cover;}
+  .tcard .thumb .b{position:absolute;top:8px;left:8px;background:var(--orange);color:#fff;font-size:9.5px;font-weight:700;padding:3px 8px;border-radius:12px;}
+  .tcard .thumb .h{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.9);display:grid;place-items:center;color:var(--orange);}
+  .tcard .body{padding:10px 11px 12px;display:flex;flex-direction:column;flex:1;}
+  .tcard h5{font-size:12.5px;font-weight:700;line-height:1.3;color:var(--text);min-height:33px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .tcard .row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);margin-top:6px;}
+  .tcard .row .st{display:flex;align-items:center;gap:2px;color:var(--text);font-weight:600;}
+  .tcard .row .st svg{color:#FFC531;}
+  .tcard .price{margin-top:9px;}
+  .tcard .price small{font-size:10px;color:var(--muted);display:block;}
+  .tcard .price b{font-size:15px;color:var(--green);font-family:'Poppins';font-weight:700;}
+  .tcard .book{margin-top:10px;border:none;background:var(--orange);color:#fff;font-family:inherit;font-weight:700;font-size:12.5px;padding:9px 0;border-radius:12px;cursor:pointer;box-shadow:0 4px 10px rgba(255,106,0,.3);}
+
+  /* Promo strip */
+  .promo{margin:20px 18px 4px;border-radius:20px;background:linear-gradient(120deg,var(--green),#124a3a);padding:18px 18px;color:#fff;display:flex;align-items:center;justify-content:space-between;overflow:hidden;position:relative;}
+  .promo .pt b{font-size:15px;font-weight:700;display:block;}
+  .promo .pt span{font-size:11.5px;opacity:.85;}
+  .promo .pb{background:var(--orange);color:#fff;border:none;font-family:inherit;font-weight:700;font-size:12px;padding:8px 15px;border-radius:12px;}
+  .promo::after{content:"";position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.06);}
+
+  /* Bottom nav */
+  .tabbar{
+    position:absolute;bottom:0;left:0;right:0;height:74px;background:#fff;
+    border-top:1px solid #eef2f0;display:flex;justify-content:space-around;align-items:center;
+    padding-bottom:10px;box-shadow:0 -6px 20px rgba(9,37,29,.06);
+  }
+  .tab{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10.5px;color:#9aa5a0;font-weight:600;cursor:pointer;}
+  .tab.active{color:var(--orange);}
+  .tab .fabish{}
+  svg{display:block;}
+</style>
+</head>
+<body>
+
+<div class="brandline">
+  <h2>HILLPARK ADVENTURE — Mobile UI Mockup</h2>
+  <p>ตัวอย่างหน้าแรกบนมือถือ · ใช้ข้อมูลทัวร์จริงจากระบบ (เลื่อนดูได้)</p>
+</div>
+
+<div class="phone">
+  <div class="notch"></div>
+
+  <!-- status bar -->
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1"/><rect x="9" y="2" width="3" height="10" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M8 2.5c2 0 3.8.8 5.1 2.1l1-1A9 9 0 0 0 8 .5 9 9 0 0 0 1.9 3.6l1 1A7 7 0 0 1 8 2.5Z"/><path d="M8 6c1 0 2 .4 2.7 1.1l1-1A5.5 5.5 0 0 0 8 4a5.5 5.5 0 0 0-3.7 2.1l1 1C6 6.4 7 6 8 6Z"/><circle cx="8" cy="10" r="1.6"/></svg>
+      <svg width="24" height="12" viewBox="0 0 24 12" fill="none"><rect x="1" y="1" width="20" height="10" rx="2.5" stroke="currentColor" stroke-width="1.2"/><rect x="2.5" y="2.5" width="15" height="7" rx="1.2" fill="currentColor"/><rect x="22" y="4" width="1.6" height="4" rx="1" fill="currentColor"/></svg>
+    </span>
+  </div>
+
+  <!-- app bar -->
+  <div class="appbar">
+    <div class="logo">
+      <div class="mark">H</div>
+      <div class="txt"><b>HILLPARK</b><span>ADVENTURE</span></div>
+    </div>
+    <div class="actions">
+      <button class="iconbtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <button class="iconbtn avatar"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&q=60" alt=""></button>
+    </div>
+  </div>
+
+  <div class="scroll">
+
+    <!-- search -->
+    <div class="searchwrap">
+      <div class="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9aa5a0" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3" stroke-linecap="round"/></svg>
+        <input placeholder="ค้นหาทัวร์ / กิจกรรมในกระบี่..." readonly>
+        <div class="go"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
+      </div>
+    </div>
+
+    <!-- hero carousel -->
+    <div class="herohead"><h3>โปรแกรมแนะนำ</h3><a href="#">ดูทั้งหมด ›</a></div>
+    <div class="carousel">
+
+      <div class="heroCard">
+        <img src="https://images.unsplash.com/photo-1622396481328-9b1b78cdd9fd?w=800&q=75" alt="">
+        <div class="grad"></div>
+        <span class="badge">ใหม่</span>
+        <div class="fav"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-8.5C.8 9.5 2 6 5.2 6c1.9 0 3 .9 3.8 2 .8-1.1 1.9-2 3.8-2 3.2 0 4.4 3.5 2.7 6.5C19 16.5 12 21 12 21Z"/></svg></div>
+        <div class="info">
+          <h4>ฮิลล์พาร์ค ซิปไลน์ & โรลเลอร์โคสเตอร์ป่าเขา</h4>
+          <div class="meta">
+            <span class="star"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .8-5.2 4.7 1.4 6.9L12 17.8 5.8 21l1.4-6.9L2 9.3l7-.8L12 2Z"/></svg>5.0</span>
+            <span>1 วัน</span><span>อ่าวนาง, กระบี่</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="heroCard">
+        <img src="https://images.unsplash.com/photo-1567789884554-0b844b597180?w=800&q=75" alt="">
+        <div class="grad"></div>
+        <span class="badge">ใหม่</span>
+        <div class="fav"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-8.5C.8 9.5 2 6 5.2 6c1.9 0 3 .9 3.8 2 .8-1.1 1.9-2 3.8-2 3.2 0 4.4 3.5 2.7 6.5C19 16.5 12 21 12 21Z"/></svg></div>
+        <div class="info">
+          <h4>ผจญภัยขับ ATV ชมวิวธรรมชาติ</h4>
+          <div class="meta">
+            <span class="star"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .8-5.2 4.7 1.4 6.9L12 17.8 5.8 21l1.4-6.9L2 9.3l7-.8L12 2Z"/></svg>5.0</span>
+            <span>30-60 นาที</span><span>กระบี่</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="heroCard">
+        <img src="https://images.unsplash.com/photo-1537956965359-7573183d1f57?w=800&q=75" alt="">
+        <div class="grad"></div>
+        <span class="badge">ยอดนิยม</span>
+        <div class="fav"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-8.5C.8 9.5 2 6 5.2 6c1.9 0 3 .9 3.8 2 .8-1.1 1.9-2 3.8-2 3.2 0 4.4 3.5 2.7 6.5C19 16.5 12 21 12 21Z"/></svg></div>
+        <div class="info">
+          <h4>ทัวร์เต็มวันเกาะห้อง & เกาะเหลาลาดิง</h4>
+          <div class="meta">
+            <span class="star"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .8-5.2 4.7 1.4 6.9L12 17.8 5.8 21l1.4-6.9L2 9.3l7-.8L12 2Z"/></svg>4.9</span>
+            <span>1 วัน</span><span>เกาะห้อง, กระบี่</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="dots"><i class="on"></i><i></i><i></i></div>
+
+    <!-- categories -->
+    <div class="cats">
+      <div class="cat active"><div class="ci"><img src="https://images.unsplash.com/photo-1519046904884-53103b34b206?w=200&q=70"></div><span>ทัวร์เกาะ</span></div>
+      <div class="cat"><div class="ci"><img src="https://images.unsplash.com/photo-1622396481328-9b1b78cdd9fd?w=200&q=70"></div><span>ซิปไลน์</span></div>
+      <div class="cat"><div class="ci"><img src="https://images.unsplash.com/photo-1567789884554-0b844b597180?w=200&q=70"></div><span>ATV</span></div>
+      <div class="cat"><div class="ci"><img src="https://images.unsplash.com/photo-1604537529428-15bcbeecfe4d?w=200&q=70"></div><span>คายัค</span></div>
+      <div class="cat"><div class="ci"><img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=200&q=70"></div><span>ดำน้ำตื้น</span></div>
+    </div>
+
+    <!-- popular grid -->
+    <div class="secthead"><h3>ทัวร์ยอดนิยม</h3><a href="#">ดูทั้งหมด ›</a></div>
+    <div class="grid">
+
+      <!-- card: kayak -->
+      <div class="tcard">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1604537466158-719b1972feb8?w=600&q=75">
+          <div class="h"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-8.5C.8 9.5 2 6 5.2 6c1.9 0 3 .9 3.8 2 .8-1.1 1.9-2 3.8-2 3.2 0 4.4 3.5 2.7 6.5C19 16.5 12 21 12 21Z"/></svg></div>
+        </div>
+        <div class="body">
+          <h5>พายเรือคายัคคลองรูด</h5>
+          <div class="row"><span class="st"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .8-5.2 4.7 1.4 6.9L12 17.8 5.8 21l1.4-6.9L2 9.3l7-.8L12 2Z"/></svg>4.8</span><span>(422)</span><span>· ครึ่งวัน</span></div>
+          <div class="price"><small>เริ่มต้น</small><b>฿900</b></div>
+          <button class="book">จองเลย</button>
+        </div>
+      </div>
+
+      <!-- card: snorkeling -->
+      <div class="tcard">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1582967788606-a171c1080cb0?w=600&q=75">
+          <div class="h"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-8.5C.8 9.5 2 6 5.2 6c1.9 0 3 .9 3.8 2 .8-1.1 1.9-2 3.8-2 3.2 0 4.4 3.5 2.7 6.5C19 16.5 12 21 12 21Z"/></svg></div>
+        </div>
+        <div class="body">
+          <h5>ทัวร์ดำน้ำ 4 เกาะยอดฮิต</h5>
+          <div class="row"><span class="st"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .8-5.2 4.7 1.4 6.9L12 17.8 5.8 21l1.4-6.9L2 9.3l7-.8L12 2Z"/></svg>4.8</span><span>(965)</span><span>· 1 วัน</span></div>
+          <div class="price"><small>เริ่มต้น</small><b>฿1,100</b></div>
+          <button class="book">จองเลย</button>
+        </div>
+      </div>
+
+      <!-- card: atv -->
+      <div class="tcard">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1567789884554-0b844b597180?w=600&q=75">
+          <div class="b">ใหม่</div>
+          <div class="h"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-8.5C.8 9.5 2 6 5.2 6c1.9 0 3 .9 3.8 2 .8-1.1 1.9-2 3.8-2 3.2 0 4.4 3.5 2.7 6.5C19 16.5 12 21 12 21Z"/></svg></div>
+        </div>
+        <div class="body">
+          <h5>ผจญภัยขับ ATV ชมวิวธรรมชาติ</h5>
+          <div class="row"><span class="st"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .8-5.2 4.7 1.4 6.9L12 17.8 5.8 21l1.4-6.9L2 9.3l7-.8L12 2Z"/></svg>5.0</span><span>(23)</span><span>· 30-60น.</span></div>
+          <div class="price"><small>เริ่มต้น</small><b>฿1,100</b></div>
+          <button class="book">จองเลย</button>
+        </div>
+      </div>
+
+      <!-- card: zipline -->
+      <div class="tcard">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1622396481328-9b1b78cdd9fd?w=600&q=75">
+          <div class="b">ใหม่</div>
+          <div class="h"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-8.5C.8 9.5 2 6 5.2 6c1.9 0 3 .9 3.8 2 .8-1.1 1.9-2 3.8-2 3.2 0 4.4 3.5 2.7 6.5C19 16.5 12 21 12 21Z"/></svg></div>
+        </div>
+        <div class="body">
+          <h5>ฮิลล์พาร์ค ซิปไลน์ & โรลเลอร์ป่าเขา</h5>
+          <div class="row"><span class="st"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.5 7 .8-5.2 4.7 1.4 6.9L12 17.8 5.8 21l1.4-6.9L2 9.3l7-.8L12 2Z"/></svg>5.0</span><span>(ใหม่)</span><span>· 1 วัน</span></div>
+          <div class="price"><small>เริ่มต้น</small><b>฿1,445</b></div>
+          <button class="book">จองเลย</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- promo -->
+    <div class="promo">
+      <div class="pt"><b>รับส่งฟรีจากโรงแรม</b><span>สำหรับทัวร์ที่ร่วมรายการ</span></div>
+      <button class="pb">ดูเงื่อนไข</button>
+    </div>
+
+  </div>
+
+  <!-- bottom nav -->
+  <div class="tabbar">
+    <div class="tab active">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M9.5 20v-6h5v6"/></svg>
+      <span>หน้าแรก</span>
+    </div>
+    <div class="tab">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6l6-3 8 3 6-3v15l-6 3-8-3-6 3V6Z"/><path d="M8 3v15M16 6v15"/></svg>
+      <span>ทริป</span>
+    </div>
+    <div class="tab">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+      <span>การจอง</span>
+    </div>
+    <div class="tab">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+      <span>โปรไฟล์</span>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -10,8 +10,8 @@ export function CategoryScroller() {
   const { lang } = useLanguage();
 
   return (
-    <section className="container-page mt-8">
-      <div className="no-scrollbar flex gap-4 overflow-x-auto rounded-2xl bg-white p-4 shadow-card sm:gap-6 sm:p-6">
+    <section className="mx-auto mt-5 w-full max-w-5xl px-4">
+      <div className="no-scrollbar flex gap-5 overflow-x-auto sm:justify-center sm:gap-8">
         {CATEGORIES.map((c) => (
           <button
             key={c.id}
@@ -20,7 +20,7 @@ export function CategoryScroller() {
           >
             <span
               className={cn(
-                "grid h-16 w-16 place-items-center overflow-hidden rounded-full ring-2 transition sm:h-[72px] sm:w-[72px]",
+                "grid h-[58px] w-[58px] place-items-center overflow-hidden rounded-full ring-2 shadow-card transition sm:h-[68px] sm:w-[68px]",
                 active === c.id ? "ring-brand-orange" : "ring-transparent"
               )}
             >
@@ -30,8 +30,8 @@ export function CategoryScroller() {
             </span>
             <span
               className={cn(
-                "max-w-[80px] text-center text-xs font-medium leading-tight",
-                active === c.id ? "text-brand-orange" : "text-brand-text/70"
+                "max-w-[70px] text-center text-[11px] font-semibold leading-tight",
+                active === c.id ? "text-brand-orange" : "text-brand-text/60"
               )}
             >
               {lang === "en" ? c.name_en : c.name_th}

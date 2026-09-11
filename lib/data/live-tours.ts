@@ -76,6 +76,13 @@ export async function getPopularTours(): Promise<Tour[]> {
   return popular.length > 0 ? popular : all.slice(0, 4);
 }
 
+export async function getFeaturedTours(): Promise<Tour[]> {
+  const all = await getAllTours();
+  const featured = all.filter((t) => t.featured);
+  const list = featured.length > 0 ? featured : all;
+  return list.slice(0, 5);
+}
+
 export async function getTourBySlug(
   slug: string
 ): Promise<{ tour: Tour; gallery: string[]; packages: Package[] } | null> {

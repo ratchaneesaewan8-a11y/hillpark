@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Star, Clock, MapPin, Heart } from "lucide-react";
+import { Star, Heart } from "lucide-react";
 import type { Tour } from "@/lib/types";
 import { formatTHB, cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/language-context";
@@ -12,68 +12,61 @@ export function TourCard({ tour }: { tour: Tour }) {
   const { lang } = useLanguage();
   const t = (th: string, en: string) => (lang === "en" ? en : th);
   const title = lang === "en" && tour.title_en ? tour.title_en : tour.title_th;
-  const reviewLabel = lang === "en" ? "reviews" : "รีวิว";
 
   return (
-    <div className="group overflow-hidden rounded-2xl bg-white shadow-card transition hover:-translate-y-1">
+    <div className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-card transition hover:-translate-y-1">
       {/* Cover */}
-      <div className="relative aspect-[4/3] overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={tour.cover_image}
-          alt={title}
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-        />
+      <div className="relative aspect-[16/11] overflow-hidden">
+        <Link href={`/tours/${tour.slug}`} className="block h-full w-full">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={tour.cover_image}
+            alt={title}
+            className="h-full w-full object-cover transition duration-500 hover:scale-105"
+          />
+        </Link>
         {tour.badge && (
-          <span className="absolute left-3 top-3 rounded-md bg-brand-orange px-2.5 py-1 text-xs font-semibold text-white">
+          <span className="absolute left-2 top-2 rounded-full bg-brand-orange px-2.5 py-1 text-[10px] font-bold text-white">
             {tour.badge}
           </span>
         )}
         <button
           onClick={() => setLiked((v) => !v)}
-          className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-brand-text/70 hover:text-brand-orange"
+          className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-white/90 text-brand-orange"
           aria-label={t("เพิ่มในรายการโปรด", "Add to wishlist")}
         >
-          <Heart size={18} className={cn(liked && "fill-brand-orange text-brand-orange")} />
+          <Heart size={15} className={cn(liked && "fill-brand-orange")} />
         </button>
       </div>
 
       {/* Body */}
-      <div className="p-4">
-        <h3 className="line-clamp-2 min-h-[2.75rem] font-semibold leading-snug text-brand-text">
-          {title}
-        </h3>
+      <div className="flex flex-1 flex-col p-3">
+        <Link href={`/tours/${tour.slug}`}>
+          <h3 className="line-clamp-2 min-h-[2.6rem] text-[13px] font-bold leading-snug text-brand-text">
+            {title}
+          </h3>
+        </Link>
 
-        <div className="mt-2 flex items-center gap-1.5 text-sm">
-          <Star size={15} className="fill-brand-orange text-brand-orange" />
-          <span className="font-semibold text-brand-text">{tour.rating.toFixed(1)}</span>
-          <span className="text-brand-text/50">({tour.review_count.toLocaleString()} {reviewLabel})</span>
+        <div className="mt-1.5 flex items-center gap-1.5 text-[11.5px] text-brand-text/55">
+          <span className="flex items-center gap-0.5 font-semibold text-brand-text">
+            <Star size={12} className="fill-[#FFC531] text-[#FFC531]" />
+            {tour.rating.toFixed(1)}
+          </span>
+          <span>({tour.review_count > 0 ? tour.review_count.toLocaleString() : t("ใหม่", "new")})</span>
+          {tour.duration && <span>· {tour.duration}</span>}
         </div>
 
-        <div className="mt-2 space-y-1 text-sm text-brand-text/60">
-          <div className="flex items-center gap-1.5">
-            <Clock size={14} />
-            <span>
-              {tour.duration}
-              {tour.start_time && ` (${tour.start_time} - ${tour.end_time})`}
-            </span>
-          </div>
-          {tour.pickup_info && (
-            <div className="flex items-center gap-1.5">
-              <MapPin size={14} /> {tour.pickup_info}
-            </div>
-          )}
+        <div className="mt-2.5">
+          <div className="text-[10px] text-brand-text/45">{t("เริ่มต้น", "From")}</div>
+          <div className="text-lg font-bold text-brand-green">{formatTHB(tour.base_price)}</div>
         </div>
 
-        <div className="mt-3 flex items-end justify-between">
-          <div>
-            <div className="text-xs text-brand-text/50">{t("เริ่มต้น", "From")}</div>
-            <div className="text-xl font-bold text-brand-text">{formatTHB(tour.base_price)}</div>
-          </div>
-          <Link href={`/tours/${tour.slug}`} className="btn-primary px-4 py-2 text-sm">
-            {t("จองเลย", "Book Now")}
-          </Link>
-        </div>
+        <Link
+          href={`/tours/${tour.slug}`}
+          className="mt-2.5 block rounded-xl bg-brand-orange py-2.5 text-center text-[13px] font-bold text-white shadow-[0_4px_10px_rgba(255,106,0,0.3)] transition hover:brightness-95"
+        >
+          {t("จองเลย", "Book Now")}
+        </Link>
       </div>
     </div>
   );
