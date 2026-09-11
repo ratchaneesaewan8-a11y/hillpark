@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { LogIn } from "lucide-react";
+import { LogIn, ArrowLeft } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -30,6 +31,12 @@ export default function AdminLoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-brand-bg px-4">
       <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-card">
+        <Link
+          href="/"
+          className="mb-4 flex items-center gap-1.5 text-sm text-brand-text/60 hover:text-brand-orange"
+        >
+          <ArrowLeft size={16} /> กลับไปหน้าหลัก
+        </Link>
         <div className="mb-6 text-center">
           <div className="text-xl font-bold text-brand-text">HILLPARK ADVENTURE</div>
           <div className="text-sm text-brand-text/60">เข้าสู่ระบบผู้ดูแล</div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, MapPinned, Tags, CalendarCheck } from "lucide-react";
+import { LayoutDashboard, MapPinned, Tags, CalendarCheck, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SignOutButton } from "./signout";
 
@@ -18,6 +18,12 @@ export function AdminSidebar() {
   return (
     <aside className="flex w-60 shrink-0 flex-col bg-brand-green p-4 text-white">
       <div className="mb-6 px-2 py-2 text-lg font-bold">HILLPARK<span className="text-brand-orange"> Admin</span></div>
+      <Link
+        href="/"
+        className="mb-4 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-white/70 transition hover:bg-white/10"
+      >
+        <Home size={18} /> กลับไปหน้าหลัก
+      </Link>
       <nav className="flex-1 space-y-1">
         {LINKS.map(({ href, label, icon: Icon }) => {
           const active = href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
