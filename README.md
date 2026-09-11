@@ -69,8 +69,16 @@ npm run dev
    - `SUPABASE_SERVICE_ROLE_KEY` (เก็บเป็นความลับ ใช้ฝั่ง server เท่านั้น)
 5. **Storage** → สร้าง bucket ชื่อ `tours` (public) สำหรับรูปทัวร์
    แล้วไป SQL Editor paste `supabase/storage.sql` → Run (ตั้งสิทธิ์อัปโหลด/อ่านรูป)
-6. ตั้ง admin: สมัครสมาชิก 1 คนก่อน (เช่นผ่านหน้า Login หรือ Supabase Auth) แล้วรันใน SQL Editor
-   `update public.users set role='admin' where email='อีเมลคุณ';`
+6. ตั้ง admin: สร้างผู้ใช้ 1 คนก่อนผ่าน **Authentication → Users → Add user** (ใส่อีเมล/รหัสผ่าน)
+   แล้วไป **Table Editor → users** แก้คอลัมน์ `role` ของแถวนั้นเป็น `admin`
+7. (ถ้าเคยรันเว็บตอนยังใช้ demo data มาก่อน) paste `supabase/sync-content.sql` → Run
+   เพื่อนำทัวร์ที่เพิ่มไว้ในโค้ด (เช่นจากข้อมูล Klook) เข้าฐานข้อมูลจริงด้วย — ไม่งั้นทัวร์พวกนี้
+   จะหายไปจากหน้าเว็บทันทีที่ต่อ Supabase เพราะหน้าเว็บจะดึงข้อมูลจริงจาก Supabase แทน demo data
+
+**สำคัญ:** ตั้งแต่ต่อ Supabase แล้ว หน้าเว็บ (โฮมเพจ / ทัวร์ทั้งหมด / รายละเอียดทัวร์) จะดึงข้อมูล
+จาก Supabase จริงโดยอัตโนมัติ (ไม่ใช่ demo data ในโค้ดอีกต่อไป) ดังนั้นทัวร์/รูปภาพที่เพิ่มหรือแก้
+ผ่านหน้า Admin จะขึ้นบนเว็บทันทีหลัง deploy — ถ้า Supabase ยังไม่ได้ตั้งค่า หรือดึงข้อมูลไม่สำเร็จ
+เว็บจะ fallback กลับไปใช้ demo data อัตโนมัติ ไม่มีวันขึ้นหน้าว่าง
 
 ---
 

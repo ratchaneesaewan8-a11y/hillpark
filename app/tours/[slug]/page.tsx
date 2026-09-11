@@ -1,14 +1,15 @@
 import { notFound } from "next/navigation";
 import { Star, Clock, MapPin } from "lucide-react";
-import { TOURS } from "@/lib/data/tours";
+import { getTourBySlug } from "@/lib/data/live-tours";
 import { formatTHB } from "@/lib/utils";
 
 // หน้า Tour Detail (เวอร์ชันเริ่มต้น)
-// TODO (ดู README §Roadmap): Gallery, Itinerary, Included/Excluded, Reviews,
+// TODO (ดู README §Roadmap): Itinerary, Included/Excluded, Reviews,
 // Booking Widget (sticky), Package selection, เชื่อม Booking Flow
-export default function TourDetailPage({ params }: { params: { slug: string } }) {
-  const tour = TOURS.find((t) => t.slug === params.slug);
-  if (!tour) return notFound();
+export default async function TourDetailPage({ params }: { params: { slug: string } }) {
+  const result = await getTourBySlug(params.slug);
+  if (!result) return notFound();
+  const { tour, gallery } = result;
 
   return (
     <div className="container-page py-8">
@@ -35,8 +36,25 @@ export default function TourDetailPage({ params }: { params: { slug: string } })
           </div>
           <p className="mt-5 leading-relaxed text-brand-text/80">{tour.description_th}</p>
 
+          {gallery.length > 0 && (
+            <div className="mt-8">
+              <h2 className="mb-3 text-lg font-semibold text-brand-text">รูปภาพเพิ่มเติม</h2>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {gallery.map((url, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={url + i}
+                    src={url}
+                    alt={`${tour.title_th} ${i + 1}`}
+                    className="aspect-square w-full rounded-xl object-cover"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="mt-8 rounded-xl border border-dashed border-black/10 bg-white p-5 text-sm text-brand-text/60">
-            ส่วนนี้ยังเป็นโครงเริ่มต้น — ดูขั้นตอนเติม Gallery / Itinerary / รายการที่รวม-ไม่รวม /
+            ส่วนนี้ยังเป็นโครงเริ่มต้น — ดูขั้นตอนเติม Itinerary / รายการที่รวม-ไม่รวม /
             รีวิว ได้ใน README (Roadmap ข้อ 3–4)
           </div>
         </div>

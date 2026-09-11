@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { ArrowRight, Flame } from "lucide-react";
-import { POPULAR_TOURS } from "@/lib/data/tours";
+import { getPopularTours } from "@/lib/data/live-tours";
 import { TourCard } from "./tour-card";
 
-export function PopularTours() {
+export async function PopularTours() {
+  const tours = await getPopularTours();
+
   return (
     <section className="container-page mt-12">
       <div className="mb-5 flex items-center justify-between">
@@ -16,7 +18,7 @@ export function PopularTours() {
       </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {POPULAR_TOURS.map((tour) => (
+        {tours.map((tour) => (
           <TourCard key={tour.id} tour={tour} />
         ))}
       </div>
