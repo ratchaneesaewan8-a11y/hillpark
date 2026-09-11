@@ -6,16 +6,11 @@ import type { Category, Tour } from "@/lib/types";
 // -----------------------------------------------------------------------------
 
 export const CATEGORIES: Category[] = [
-  { id: "all", name_th: "ทั้งหมด", name_en: "All", slug: "all", image: "https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?w=200&q=70", active: true, sort_order: 0 },
   { id: "island", name_th: "ทัวร์เกาะ", name_en: "Island Tours", slug: "island-tours", image: "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=200&q=70", active: true, sort_order: 1 },
-  { id: "diving", name_th: "ดำน้ำ", name_en: "Diving", slug: "diving", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=200&q=70", active: true, sort_order: 2 },
-  { id: "kayak", name_th: "พายเรือคายัค", name_en: "Kayaking", slug: "kayaking", image: "https://images.unsplash.com/photo-1604537529428-15bcbeecfe4d?w=200&q=70", active: true, sort_order: 3 },
-  { id: "atv", name_th: "ATV / ขับ ATV", name_en: "ATV", slug: "atv", image: "https://images.unsplash.com/photo-1567789884554-0b844b597180?w=200&q=70", active: true, sort_order: 4 },
-  { id: "zipline", name_th: "Zipline / โหนสลิง", name_en: "Zipline", slug: "zipline", image: "https://images.unsplash.com/photo-1622396481328-9b1b78cdd9fd?w=200&q=70", active: true, sort_order: 5 },
-  { id: "sunset", name_th: "ชมพระอาทิตย์ตก", name_en: "Sunset Tours", slug: "sunset-tours", image: "https://images.unsplash.com/photo-1495954484750-af469f2f9be5?w=200&q=70", active: true, sort_order: 6 },
-  { id: "nature", name_th: "ทัวร์ธรรมชาติ", name_en: "Nature Tours", slug: "nature-tours", image: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=200&q=70", active: true, sort_order: 7 },
-  { id: "water", name_th: "กิจกรรมทางน้ำ", name_en: "Water Activities", slug: "water-activities", image: "https://images.unsplash.com/photo-1530053969600-caed2596d242?w=200&q=70", active: true, sort_order: 8 },
-  { id: "private", name_th: "ทัวร์แบบส่วนตัว", name_en: "Private Tours", slug: "private-tours", image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=200&q=70", active: true, sort_order: 9 },
+  { id: "zipline", name_th: "ซิปไลน์", name_en: "Zipline", slug: "zipline", image: "https://images.unsplash.com/photo-1622396481328-9b1b78cdd9fd?w=200&q=70", active: true, sort_order: 2 },
+  { id: "atv", name_th: "ผจญภัยขับ ATV", name_en: "ATV Adventure", slug: "atv", image: "https://images.unsplash.com/photo-1567789884554-0b844b597180?w=200&q=70", active: true, sort_order: 3 },
+  { id: "kayak", name_th: "ทัวร์พายเรือคายัค", name_en: "Kayaking Tour", slug: "kayaking", image: "https://images.unsplash.com/photo-1604537529428-15bcbeecfe4d?w=200&q=70", active: true, sort_order: 4 },
+  { id: "diving", name_th: "ทัวร์ดำน้ำตื้น", name_en: "Snorkeling Tour", slug: "diving", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=200&q=70", active: true, sort_order: 5 },
 ];
 
 export const TOURS: Tour[] = [

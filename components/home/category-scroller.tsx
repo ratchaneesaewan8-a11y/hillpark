@@ -5,7 +5,7 @@ import { CATEGORIES } from "@/lib/data/tours";
 import { cn } from "@/lib/utils";
 
 export function CategoryScroller() {
-  const [active, setActive] = useState("all");
+  const [active, setActive] = useState(CATEGORIES[0]?.id ?? "");
 
   return (
     <section className="container-page mt-8">
