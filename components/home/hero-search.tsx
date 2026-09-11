@@ -5,7 +5,7 @@ import { MapPin, Calendar, Users, Search } from "lucide-react";
 export function HeroSearch() {
   return (
     <section className="relative">
-      {/* แบนเนอร์แสดงเต็มภาพ ไม่ครอป — ความกว้างเต็มจอเท่าเดิม สูงปรับตามสัดส่วนภาพ */}
+      {/* แบนเนอร์แสดงเต็มภาพ ไม่ครอป — ความกว้างเต็มจอเท่าเดิม สูงปรับตามสัดส่วนภาพ (ขนาดนี้ตามที่ลูกค้าต้องการ) */}
       <div className="w-full bg-brand-green">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
