@@ -1,7 +1,24 @@
+"use client";
+
+import { useRef, useState } from "react";
 import { ImageUpload } from "./image-upload";
 import type { Category } from "@/lib/types";
 
 type TourLike = Record<string, any> | null;
+
+// แปลงข้อความเป็น slug (a-z, 0-9, ขีดกลาง) — ตัวอักษรไทยจะถูกตัดออก
+// เพราะ URL slug ต้องเป็นภาษาอังกฤษ ให้พิมพ์ชื่อทัวร์ (อังกฤษ) ไว้ด้วยจะได้ slug ที่อ่านง่าย
+function slugify(text: string) {
+  return text
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 // ฟิลด์ของฟอร์มทัวร์ (ใช้ทั้งหน้า "เพิ่ม" และ "แก้ไข") — วางไว้ใน <form action={saveTour}>
 export function TourFields({
@@ -11,6 +28,24 @@ export function TourFields({
   tour: TourLike;
   categories: Category[];
 }) {
+  const [titleEn, setTitleEn] = useState(tour?.title_en ?? "");
+  const [slug, setSlug] = useState(tour?.slug ?? "");
+  // ทัวร์ที่มีอยู่แล้ว (แก้ไข) ถือว่า slug ถูกตั้งไว้แล้ว ไม่ auto-เขียนทับ
+  // ทัวร์ใหม่ (เพิ่ม) จะ auto-กรอกให้จนกว่าผู้ใช้จะพิมพ์แก้ slug เอง
+  const slugEdited = useRef(Boolean(tour?.id));
+
+  function handleTitleChange(value: string, field: "th" | "en") {
+    if (field === "en") setTitleEn(value);
+    if (slugEdited.current) return;
+    const base = field === "en" ? value : titleEn || value;
+    setSlug(slugify(base));
+  }
+
+  function handleSlugChange(value: string) {
+    slugEdited.current = true;
+    setSlug(value);
+  }
+
   return (
     <div className="grid gap-5">
       {tour?.id && <input type="hidden" name="id" value={tour.id} />}
@@ -18,15 +53,36 @@ export function TourFields({
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className="label">ชื่อทัวร์ (ไทย) *</label>
-          <input name="title_th" required defaultValue={tour?.title_th ?? ""} className="input" />
+          <input
+            name="title_th"
+            required
+            defaultValue={tour?.title_th ?? ""}
+            onChange={(e) => handleTitleChange(e.target.value, "th")}
+            className="input"
+          />
         </div>
         <div>
           <label className="label">ชื่อทัวร์ (อังกฤษ)</label>
-          <input name="title_en" defaultValue={tour?.title_en ?? ""} className="input" />
+          <input
+            name="title_en"
+            value={titleEn}
+            onChange={(e) => handleTitleChange(e.target.value, "en")}
+            className="input"
+          />
         </div>
         <div>
           <label className="label">Slug (URL) *</label>
-          <input name="slug" required defaultValue={tour?.slug ?? ""} placeholder="full-day-hong-island" className="input" />
+          <input
+            name="slug"
+            required
+            value={slug}
+            onChange={(e) => handleSlugChange(e.target.value)}
+            placeholder="full-day-hong-island"
+            className="input"
+          />
+          <p className="mt-1 text-xs text-brand-text/50">
+            ระบบกรอกให้อัตโนมัติจากชื่อทัวร์ (อังกฤษ) — แก้เองได้ตลอด
+          </p>
         </div>
         <div>
           <label className="label">หมวดหมู่</label>
