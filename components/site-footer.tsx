@@ -47,8 +47,11 @@ export function SiteFooter() {
           </div>
         </div>
       </div>
-      <div className="border-t border-white/10 py-4 text-center text-xs text-white/50">
-        © {new Date().getFullYear()} HILLPARK ADVENTURE. All rights reserved.
+      <div className="container-page flex flex-col items-center justify-between gap-2 border-t border-white/10 py-4 text-xs text-white/50 sm:flex-row">
+        <span>© {new Date().getFullYear()} HILLPARK ADVENTURE. All rights reserved.</span>
+        <Link href="/admin/login" className="hover:text-brand-orange">
+          สำหรับผู้ดูแลระบบ (Admin)
+        </Link>
       </div>
     </footer>
   );
