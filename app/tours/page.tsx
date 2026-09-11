@@ -2,6 +2,9 @@ import { getAllTours } from "@/lib/data/live-tours";
 import { TourCard } from "@/components/home/tour-card";
 import { T } from "@/lib/i18n/language-context";
 
+// อ่านข้อมูลสดจาก Supabase ทุกครั้ง (ทัวร์ที่แอดมินเพิ่ม/แก้ ขึ้นทันที)
+export const dynamic = "force-dynamic";
+
 // หน้า Tour Listing (เวอร์ชันเริ่มต้น) — ยังไม่มี Filter/Sort จริง
 // TODO (ดู README §Roadmap): เพิ่ม Sidebar Filter + Sort
 export default async function ToursPage() {

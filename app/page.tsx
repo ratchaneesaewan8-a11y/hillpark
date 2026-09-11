@@ -5,6 +5,9 @@ import { PromoStrip } from "@/components/home/promo-strip";
 import { Benefits } from "@/components/home/benefits";
 import { getFeaturedTours } from "@/lib/data/live-tours";
 
+// อ่านข้อมูลสดจาก Supabase ทุกครั้ง (ทัวร์แนะนำที่แอดมินเพิ่ม/แก้ ขึ้นทันที)
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const featured = await getFeaturedTours();
 

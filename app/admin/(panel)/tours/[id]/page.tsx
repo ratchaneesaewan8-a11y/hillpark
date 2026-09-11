@@ -70,23 +70,51 @@ export default async function EditTourPage({ params }: { params: { id: string } 
           )}
         </div>
 
-        <form action={savePackage} className="grid gap-3 border-t border-black/5 pt-4 sm:grid-cols-3 lg:grid-cols-6">
+        <form action={savePackage} className="border-t border-black/5 pt-4">
           <input type="hidden" name="tour_id" value={tour.id} />
-          <input name="name_th" required placeholder="ชื่อแพ็กเกจ" className="input" />
-          <input name="adult_price" type="number" required placeholder="ราคาผู้ใหญ่" className="input" />
-          <input name="child_price" type="number" defaultValue={0} placeholder="ราคาเด็ก" className="input" />
-          <input name="infant_price" type="number" defaultValue={0} placeholder="ราคาเด็กเล็ก" className="input" />
-          <input name="capacity" type="number" defaultValue={0} placeholder="จำนวนที่รับ" className="input" />
-          <input
-            name="payment_link"
-            type="url"
-            placeholder="ลิงก์ Stripe Payment Link (https://buy.stripe.com/...)"
-            className="input sm:col-span-3 lg:col-span-5"
-          />
-          <label className="flex items-center gap-2 text-sm text-brand-text/70">
-            <input type="checkbox" name="active" defaultChecked /> ใช้งาน
+
+          <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70 sm:col-span-3 lg:col-span-1">
+              ชื่อแพ็กเกจ
+              <input name="name_th" required placeholder="เช่น แพ็กเกจมาตรฐาน" className="input" />
+            </label>
+            <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
+              ราคาผู้ใหญ่ (บาท)
+              <input name="adult_price" type="number" required placeholder="0" className="input" />
+            </label>
+            <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
+              ราคาเด็ก (บาท)
+              <input name="child_price" type="number" defaultValue={0} className="input" />
+            </label>
+            <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
+              ราคาเด็กเล็ก (บาท)
+              <input name="infant_price" type="number" defaultValue={0} className="input" />
+            </label>
+            <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
+              จำนวนที่รับ (คน/รอบ)
+              <input name="capacity" type="number" defaultValue={0} className="input" />
+            </label>
+          </div>
+
+          <label className="mt-4 flex flex-col gap-1 text-xs font-medium text-brand-text/70">
+            ลิงก์ชำระเงิน Stripe (Payment Link)
+            <input
+              name="payment_link"
+              type="url"
+              placeholder="https://buy.stripe.com/..."
+              className="input"
+            />
+            <span className="text-[11px] font-normal text-brand-text/45">
+              วางลิงก์จาก Stripe → ปุ่ม "จองเลย" ในหน้าลูกค้าจะพาไปจ่ายเงินที่ลิงก์นี้ (เว้นว่างได้ถ้ายังไม่มี)
+            </span>
           </label>
-          <button className="btn-primary sm:col-span-3 lg:col-span-1"><Plus size={18} /> เพิ่มแพ็กเกจ</button>
+
+          <div className="mt-4 flex items-center justify-between">
+            <label className="flex items-center gap-2 text-sm text-brand-text/70">
+              <input type="checkbox" name="active" defaultChecked /> ใช้งาน
+            </label>
+            <button className="btn-primary"><Plus size={18} /> เพิ่มแพ็กเกจ</button>
+          </div>
         </form>
       </section>
 

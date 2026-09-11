@@ -67,12 +67,16 @@ export async function savePackage(formData: FormData) {
     payment_link: (formData.get("payment_link") as string) || null,
     active: formData.get("active") === "on",
   };
-  if (id) {
-    await supabase.from("packages").update(payload).eq("id", id);
-  } else {
-    await supabase.from("packages").insert(payload);
+  const { error } = id
+    ? await supabase.from("packages").update(payload).eq("id", id)
+    : await supabase.from("packages").insert(payload);
+
+  if (error) {
+    // แสดง error ให้เห็นชัด (เช่น ยังไม่ได้สร้างคอลัมน์ payment_link -> ต้องรัน supabase/add-payment-link.sql)
+    throw new Error(`บันทึกแพ็กเกจไม่สำเร็จ: ${error.message}`);
   }
   revalidatePath(`/admin/tours/${tourId}`);
+  revalidatePath("/tours", "layout");
 }
 
 export async function deletePackage(formData: FormData) {

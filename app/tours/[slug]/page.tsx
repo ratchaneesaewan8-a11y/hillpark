@@ -2,6 +2,9 @@ import { notFound } from "next/navigation";
 import { getTourBySlug } from "@/lib/data/live-tours";
 import { TourDetailContent } from "@/components/tours/tour-detail-content";
 
+// อ่านข้อมูลสดจาก Supabase ทุกครั้ง เพื่อให้แพ็กเกจ/ลิงก์ชำระเงินที่แอดมินเพิ่ม ขึ้นทันที
+export const dynamic = "force-dynamic";
+
 // หน้า Tour Detail (เวอร์ชันเริ่มต้น)
 // TODO (ดู README §Roadmap): Itinerary, Included/Excluded, Reviews,
 // Booking Widget (sticky), Package selection, เชื่อม Booking Flow
