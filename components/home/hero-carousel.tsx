@@ -21,10 +21,10 @@ export function HeroCarousel({ tours }: { tours: Tour[] }) {
 
   return (
     <section className="mx-auto w-full max-w-5xl px-4 pt-4">
-      {/* ช่องค้นหา */}
+      {/* ช่องค้นหา (เฉพาะมือถือ — จอใหญ่ใช้ช่องค้นหาบนแบนเนอร์แทน) */}
       <Link
         href="/tours"
-        className="flex items-center gap-2.5 rounded-2xl border border-black/5 bg-white px-4 py-3 shadow-card"
+        className="flex items-center gap-2.5 rounded-2xl border border-black/5 bg-white px-4 py-3 shadow-card lg:hidden"
       >
         <Search size={18} className="text-brand-text/40" />
         <span className="flex-1 text-sm text-brand-text/50">
@@ -36,7 +36,7 @@ export function HeroCarousel({ tours }: { tours: Tour[] }) {
       </Link>
 
       {/* หัวข้อ */}
-      <div className="mt-5 flex items-center justify-between">
+      <div className="mt-5 flex items-center justify-between lg:mt-2">
         <h2 className="text-lg font-bold text-brand-green">{t("โปรแกรมแนะนำ", "Featured Trips")}</h2>
         <Link href="/tours" className="text-sm font-semibold text-brand-orange">
           {t("ดูทั้งหมด", "See All")} ›

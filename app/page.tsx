@@ -1,3 +1,4 @@
+import { HeroBanner } from "@/components/home/hero-banner";
 import { HeroCarousel } from "@/components/home/hero-carousel";
 import { CategoryScroller } from "@/components/home/category-scroller";
 import { PopularTours } from "@/components/home/popular-tours";
@@ -13,6 +14,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <HeroBanner />
       <HeroCarousel tours={featured} />
       <CategoryScroller />
       <PopularTours />
