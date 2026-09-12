@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { TourFields } from "@/components/admin/tour-fields";
 import { ImageUpload } from "@/components/admin/image-upload";
@@ -42,27 +42,62 @@ export default async function EditTourPage({ params }: { params: { id: string } 
         <h2 className="mb-4 text-lg font-bold text-brand-text">แพ็กเกจและราคา</h2>
         <div className="mb-5 space-y-2">
           {(packages ?? []).map((p) => (
-            <div key={p.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-black/5 px-4 py-3 text-sm">
-              <div>
-                <span className="font-medium">{p.name_th}</span>
-                <span className="ml-3 text-brand-text/60">
-                  ราคา {formatTHB(p.adult_price)} · รับได้ {p.capacity} คน
-                </span>
-                <div className="mt-1 text-xs">
-                  {p.payment_link ? (
-                    <a href={p.payment_link} target="_blank" rel="noopener noreferrer" className="text-brand-teal hover:underline">
-                      {p.payment_link}
-                    </a>
-                  ) : (
-                    <span className="text-red-500">ยังไม่ได้ใส่ลิงก์ชำระเงิน (Stripe Payment Link)</span>
-                  )}
+            <div key={p.id} className="rounded-xl border border-black/5 px-4 py-3 text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <span className="font-medium">{p.name_th}</span>
+                  <span className="ml-3 text-brand-text/60">
+                    ราคา {formatTHB(p.adult_price)} · รับได้ {p.capacity} คน
+                  </span>
+                  <div className="mt-1 text-xs">
+                    {p.payment_link ? (
+                      <a href={p.payment_link} target="_blank" rel="noopener noreferrer" className="text-brand-teal hover:underline">
+                        {p.payment_link}
+                      </a>
+                    ) : (
+                      <span className="text-red-500">ยังไม่ได้ใส่ลิงก์ชำระเงิน (Stripe Payment Link)</span>
+                    )}
+                  </div>
                 </div>
+                <form action={deletePackage}>
+                  <input type="hidden" name="id" value={p.id} />
+                  <input type="hidden" name="tour_id" value={tour.id} />
+                  <button className="text-red-500 hover:text-red-700" title="ลบแพ็กเกจ"><Trash2 size={16} /></button>
+                </form>
               </div>
-              <form action={deletePackage}>
-                <input type="hidden" name="id" value={p.id} />
-                <input type="hidden" name="tour_id" value={tour.id} />
-                <button className="text-red-500 hover:text-red-700"><Trash2 size={16} /></button>
-              </form>
+
+              {/* ปุ่มแก้ไข -> เปิดฟอร์มแก้ไขแพ็กเกจนี้ */}
+              <details className="mt-2 group">
+                <summary className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-brand-orange">
+                  <Pencil size={13} /> แก้ไขแพ็กเกจนี้
+                </summary>
+                <form action={savePackage} className="mt-3 grid gap-3 border-t border-black/5 pt-3 sm:grid-cols-2">
+                  <input type="hidden" name="id" value={p.id} />
+                  <input type="hidden" name="tour_id" value={tour.id} />
+                  <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
+                    ชื่อแพ็กเกจ
+                    <input name="name_th" required defaultValue={p.name_th} className="input" />
+                  </label>
+                  <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
+                    ราคา (บาท/คน)
+                    <input name="adult_price" type="number" required defaultValue={p.adult_price} className="input" />
+                  </label>
+                  <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
+                    จำนวนที่รับ (คน/รอบ)
+                    <input name="capacity" type="number" defaultValue={p.capacity} className="input" />
+                  </label>
+                  <label className="flex items-center gap-2 pt-5 text-sm text-brand-text/70">
+                    <input type="checkbox" name="active" defaultChecked={p.active} /> ใช้งาน
+                  </label>
+                  <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70 sm:col-span-2">
+                    ลิงก์ชำระเงิน Stripe (Payment Link)
+                    <input name="payment_link" type="url" defaultValue={p.payment_link ?? ""} placeholder="https://buy.stripe.com/..." className="input" />
+                  </label>
+                  <div className="sm:col-span-2">
+                    <button className="btn-primary">บันทึกการแก้ไข</button>
+                  </div>
+                </form>
+              </details>
             </div>
           ))}
           {(!packages || packages.length === 0) && (

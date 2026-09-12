@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, MapPinned, Tags, CalendarCheck, Home } from "lucide-react";
+import { LayoutDashboard, MapPinned, Tags, CalendarCheck, Home, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SignOutButton } from "./signout";
 
@@ -11,6 +11,7 @@ const LINKS = [
   { href: "/admin/tours", label: "จัดการทัวร์", icon: MapPinned },
   { href: "/admin/categories", label: "หมวดหมู่", icon: Tags },
   { href: "/admin/bookings", label: "การจอง", icon: CalendarCheck },
+  { href: "/admin/users", label: "ผู้ดูแลระบบ", icon: ShieldCheck },
 ];
 
 export function AdminSidebar() {
