@@ -13,6 +13,7 @@ const NAV = [
   { href: "/reviews", label_th: "รีวิวจากลูกค้า", label_en: "Reviews" },
   { href: "/blog", label_th: "บทความ", label_en: "Blog" },
   { href: "/contact", label_th: "ติดต่อเรา", label_en: "Contact" },
+  { href: "/partners", label_th: "ร่วมเป็นพาร์ทเนอร์", label_en: "Become a Partner" },
 ];
 
 export function SiteHeader() {

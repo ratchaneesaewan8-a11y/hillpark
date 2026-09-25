@@ -156,6 +156,18 @@ const { data: tours } = await supabase.from("tours").select("*").eq("active", tr
 
 **Phase 2** (ตามสเปก §41): คูปอง, affiliate, LINE/WhatsApp notify, อีเมลอัตโนมัติ, multi-tour cart, gift voucher
 
+### ระบบพาร์ทเนอร์ / Affiliate
+
+ระบบนี้เพิ่มไว้แล้วในโค้ด โดยก่อนใช้งานให้เปิด Supabase SQL Editor แล้วรัน
+`supabase/affiliate.sql` หนึ่งครั้ง จากนั้น:
+
+- ลูกค้าสมัครที่ `/partners` และแอดมินจัดการที่ `/admin/partners`
+- เมื่อแอดมินเปลี่ยนสถานะเป็น **อนุมัติ** ระบบสร้าง Code เช่น `GUIDE-A001` ให้เอง
+- ลิงก์ `/ref/GUIDE-A001` จดจำผู้แนะนำ 30 วัน; Checkout จะบันทึก Partner ที่อ้างอิงไว้กับ Booking
+- Stripe webhook เปลี่ยน Booking เป็น `PAID` แล้ว trigger จะสร้าง Commission สถานะ `pending`
+- เมื่อแอดมินเปลี่ยน Booking เป็น `COMPLETED` เครดิตเป็น `available`; ถ้า `CANCELLED`/`REFUNDED` จะเป็น `void`
+- คำขอถอนเงินอยู่ในตาราง `withdrawals` และแอดมินตรวจ/เปลี่ยนเป็น `paid` ได้ที่ `/admin/withdrawals`
+
 ---
 
 ## 6) Deploy (Vercel)

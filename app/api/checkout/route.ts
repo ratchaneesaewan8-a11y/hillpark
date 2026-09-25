@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 
 // -----------------------------------------------------------------------------
 // POST /api/checkout
@@ -15,6 +16,19 @@ export async function POST(req: Request) {
     const { tourId, packageId, date, startTime, adults = 0, children = 0, infants = 0, contact } = body;
 
     const supabase = createAdminClient();
+    // รหัส referral จะมาจาก cookie ที่ /ref/[code] ตั้งไว้เท่านั้น
+    // ไม่รับ partner id จาก browser เพื่อป้องกันการสวมสิทธิ์คอมมิชชัน
+    const referralCode = cookies().get("hillpark_ref")?.value;
+    let affiliatePartnerId: string | null = null;
+    if (referralCode) {
+      const { data: partner } = await supabase
+        .from("partners")
+        .select("id")
+        .eq("affiliate_code", referralCode)
+        .eq("status", "approved")
+        .maybeSingle();
+      affiliatePartnerId = partner?.id ?? null;
+    }
 
     // 1) ตรวจสอบ package + ดึงราคาจริงจาก DB
     const { data: pkg, error: pkgErr } = await supabase
@@ -57,6 +71,7 @@ export async function POST(req: Request) {
         total,
         currency: "thb",
         booking_status: "PENDING_PAYMENT",
+        affiliate_partner_id: affiliatePartnerId,
       })
       .select("id, booking_number")
       .single();
