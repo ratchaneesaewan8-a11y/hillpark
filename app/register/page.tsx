@@ -16,6 +16,16 @@ export default function RegisterPage() {
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  async function handleGoogle() {
+    setError(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) setError("สมัคร/เข้าสู่ระบบด้วย Google ไม่สำเร็จ");
+  }
+
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -82,6 +92,17 @@ export default function RegisterPage() {
           <div className="text-xl font-bold text-brand-text">สมัครสมาชิก</div>
           <div className="text-sm text-brand-text/60">สร้างบัญชีเพื่อจองและติดตามทริปของคุณ</div>
         </div>
+        <button
+          type="button"
+          onClick={handleGoogle}
+          className="mb-4 flex w-full items-center justify-center gap-2.5 rounded-xl border border-black/10 bg-white py-2.5 text-sm font-semibold text-brand-text transition hover:bg-black/[0.03]"
+        >
+          <GoogleIcon /> สมัครด้วย Google
+        </button>
+        <div className="mb-4 flex items-center gap-3 text-xs text-brand-text/40">
+          <span className="h-px flex-1 bg-black/10" /> หรือ <span className="h-px flex-1 bg-black/10" />
+        </div>
+
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-brand-text">ชื่อ</label>
@@ -136,5 +157,16 @@ export default function RegisterPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.3 0 24 0 14.6 0 6.4 5.4 2.5 13.3l7.9 6.2C12.3 13.3 17.6 9.5 24 9.5Z" />
+      <path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-2.8-.4-4.1H24v7.8h12.7c-.3 2.1-1.6 5.2-4.6 7.3l7.1 5.5c4.3-3.9 6.9-9.8 6.9-16.5Z" />
+      <path fill="#FBBC05" d="M10.4 28.5c-.5-1.5-.8-3-.8-4.5s.3-3 .8-4.5l-7.9-6.2C.9 16.5 0 20.1 0 24s.9 7.5 2.5 10.7l7.9-6.2Z" />
+      <path fill="#34A853" d="M24 48c6.3 0 11.6-2.1 15.5-5.7l-7.1-5.5c-2 1.3-4.6 2.2-8.4 2.2-6.4 0-11.7-3.8-13.6-9.5l-7.9 6.2C6.4 42.6 14.6 48 24 48Z" />
+    </svg>
   );
 }
