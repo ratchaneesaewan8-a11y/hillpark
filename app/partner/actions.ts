@@ -12,17 +12,35 @@ export async function applyPartner(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const payload = {
-    user_id: user.id,
+  const fields = {
     business_name: ((formData.get("business_name") as string) || "").trim() || null,
     phone: ((formData.get("phone") as string) || "").trim() || null,
     note: ((formData.get("note") as string) || "").trim() || null,
-    status: "pending",
   };
 
-  // upsert กันกดสมัครซ้ำ (1 user = 1 ใบสมัคร)
-  const { error } = await supabase.from("partners").upsert(payload, { onConflict: "user_id" });
-  if (error) throw new Error(`สมัครพาร์ทเนอร์ไม่สำเร็จ: ${error.message}`);
+  // มีใบสมัครอยู่แล้วไหม (1 user = 1 ใบสมัคร)
+  const { data: existing } = await supabase
+    .from("partners")
+    .select("id, status")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (existing) {
+    // สมัครใหม่ได้เฉพาะกรณีเคยถูกปฏิเสธ -> ตั้งกลับเป็น pending
+    if (existing.status === "rejected") {
+      const { error } = await supabase
+        .from("partners")
+        .update({ ...fields, status: "pending" })
+        .eq("id", existing.id);
+      if (error) throw new Error(`ส่งใบสมัครไม่สำเร็จ: ${error.message}`);
+    }
+    // pending/approved -> ไม่ต้องทำอะไร แค่พากลับไปหน้าสถานะ
+  } else {
+    const { error } = await supabase
+      .from("partners")
+      .insert({ user_id: user.id, status: "pending", ...fields });
+    if (error) throw new Error(`ส่งใบสมัครไม่สำเร็จ: ${error.message}`);
+  }
 
   revalidatePath("/partner");
   redirect("/partner");
