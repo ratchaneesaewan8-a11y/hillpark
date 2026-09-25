@@ -3,6 +3,7 @@ import { Prompt } from "next/font/google";
 import "./globals.css";
 import { SiteChrome } from "@/components/site-chrome";
 import { LanguageProvider } from "@/lib/i18n/language-context";
+import { RefCapture } from "@/components/ref-capture";
 
 const prompt = Prompt({
   subsets: ["latin", "thai"],
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="th" className={prompt.variable}>
       <body className="font-sans">
         <LanguageProvider>
+          <RefCapture />
           <SiteChrome>{children}</SiteChrome>
         </LanguageProvider>
       </body>

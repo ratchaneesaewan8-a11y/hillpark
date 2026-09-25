@@ -1,23 +1,231 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Copy, WalletCards, ArrowUpRight, Clock3 } from "lucide-react";
+import Link from "next/link";
+import { Handshake, Clock, XCircle, Link2, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { applyPartner, requestPayout } from "./actions";
+import { ShareBox } from "@/components/partner/share-box";
 import { formatTHB } from "@/lib/utils";
-import { requestWithdrawal } from "./actions";
+
+const PAYOUT_STATUS: Record<string, { text: string; cls: string }> = {
+  pending: { text: "รอโอน", cls: "text-brand-orange" },
+  paid: { text: "โอนแล้ว", cls: "text-brand-teal" },
+  rejected: { text: "ปฏิเสธ", cls: "text-red-500" },
+};
+
+const COMM_STATUS: Record<string, { text: string; cls: string }> = {
+  pending: { text: "รอใช้บริการ", cls: "bg-brand-orange/10 text-brand-orange" },
+  available: { text: "พร้อมถอน", cls: "bg-brand-teal/10 text-brand-teal" },
+  paid: { text: "จ่ายแล้ว", cls: "bg-black/5 text-brand-text/60" },
+  void: { text: "ยกเลิก", cls: "bg-red-100 text-red-500" },
+};
 
 export const dynamic = "force-dynamic";
 
-export default async function PartnerPortal() {
-  const supabase = createClient(); const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login?next=/partner");
-  const { data: partner } = await supabase.from("partners").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).maybeSingle();
-  if (!partner) return <main className="container-page py-20 text-center"><h1 className="text-3xl font-bold">ยังไม่มีบัญชีพาร์ทเนอร์</h1><p className="mt-3 text-brand-text/60">สมัครเป็นพาร์ทเนอร์ก่อน แล้วทีมงานจะตรวจสอบข้อมูลให้</p><Link href="/partners" className="btn-primary mt-6">สมัครเป็นพาร์ทเนอร์</Link></main>;
-  const [{ data: commissions }, { data: withdrawals }] = await Promise.all([supabase.from("commissions").select("*, bookings(booking_number, total)").eq("partner_id", partner.id).order("created_at", { ascending: false }), supabase.from("withdrawals").select("*").eq("partner_id", partner.id).order("requested_at", { ascending: false })]);
-  const available = (commissions ?? []).filter(c => c.status === "available").reduce((sum,c) => sum+c.amount,0);
-  const pending = (commissions ?? []).filter(c => c.status === "pending").reduce((sum,c) => sum+c.amount,0);
-  const reserved = (withdrawals ?? []).filter(w => w.status === "requested" || w.status === "approved").reduce((sum,w) => sum+w.amount,0);
-  const link = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://hillpark.com"}/ref/${partner.affiliate_code ?? "PENDING"}`;
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(link)}`;
-  return <main className="min-h-screen bg-slate-50 py-8 lg:py-12"><div className="container-page"><div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm font-semibold text-brand-teal">PARTNER PORTAL</p><h1 className="text-3xl font-bold">สวัสดี {partner.full_name}</h1></div><span className="rounded-full bg-teal-100 px-3 py-1.5 text-sm text-teal-800">{partner.status === "approved" ? "บัญชีได้รับอนุมัติ" : "กำลังตรวจสอบใบสมัคร"}</span></div>{partner.status !== "approved" ? <div className="mt-7 rounded-2xl bg-white p-8 shadow-soft"><Clock3 className="text-brand-teal"/><h2 className="mt-3 text-xl font-bold">ใบสมัครอยู่ระหว่างตรวจสอบ</h2><p className="mt-2 text-brand-text/60">เมื่ออนุมัติ เราจะสร้าง Affiliate Code และเปิดใช้แดชบอร์ดรายได้ให้อัตโนมัติ</p></div> : <><div className="mt-7 grid gap-4 md:grid-cols-3"><Card label="เครดิตพร้อมถอน" value={formatTHB(Math.max(0, available-reserved))} icon={WalletCards}/><Card label="รอลูกค้าใช้บริการ" value={formatTHB(pending)} icon={Clock3}/><Card label="ยอดคำขอที่กำลังดำเนินการ" value={formatTHB(reserved)} icon={ArrowUpRight}/></div><div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_.9fr]"><div className="rounded-2xl bg-white p-6 shadow-soft"><p className="text-sm font-semibold text-brand-teal">ลิงก์แนะนำของคุณ</p><h2 className="mt-1 text-xl font-bold">{partner.affiliate_code}</h2><div className="mt-5 flex gap-2 rounded-xl bg-slate-50 p-2"><code className="min-w-0 flex-1 truncate px-2 py-2 text-sm">{link}</code><span className="inline-flex items-center gap-1 rounded-lg bg-brand-green px-3 py-2 text-xs text-white"><Copy size={14}/>คัดลอก</span></div><div className="mt-5 flex items-center gap-4 rounded-xl border border-dashed border-slate-300 p-4"><img src={qrUrl} width="80" height="80" alt={`QR Code for ${partner.affiliate_code}`} className="h-20 w-20 rounded-lg bg-white p-1"/><p className="text-sm text-brand-text/60">สแกน QR Code นี้หรือส่งลิงก์ให้ลูกค้าได้โดยตรง ระบบจะจดจำรหัสแนะนำ 30 วัน</p></div></div><div className="rounded-2xl bg-brand-green p-6 text-white shadow-soft"><p className="text-sm text-white/65">ขอถอนเงิน</p><p className="mt-1 text-2xl font-bold">ยอดคงเหลือ {formatTHB(Math.max(0, available-reserved))}</p><form action={requestWithdrawal} className="mt-5"><input type="hidden" name="partner_id" value={partner.id}/><label className="text-sm">จำนวนเงิน (บาท)<input required min="1" max={Math.max(0,available-reserved)} name="amount" type="number" className="mt-2 w-full rounded-xl border-0 bg-white px-3 py-2.5 text-brand-text outline-none"/></label><button className="mt-3 w-full rounded-xl bg-brand-teal py-2.5 font-semibold">ส่งคำขอถอนเงิน</button></form></div></div><div className="mt-6 overflow-hidden rounded-2xl bg-white shadow-soft"><div className="border-b px-6 py-4 font-bold">คอมมิชชันล่าสุด</div><table className="w-full text-sm"><thead className="bg-slate-50 text-left text-brand-text/60"><tr><th className="px-6 py-3">Booking</th><th className="px-6 py-3">คอมมิชชัน</th><th className="px-6 py-3">สถานะ</th></tr></thead><tbody>{(commissions ?? []).slice(0,8).map(c => <tr key={c.id} className="border-t border-black/5"><td className="px-6 py-3">{(c.bookings as any)?.booking_number ?? "-"}</td><td className="px-6 py-3 font-semibold text-brand-teal">{formatTHB(c.amount)}</td><td className="px-6 py-3">{c.status}</td></tr>)}{!commissions?.length && <tr><td colSpan={3} className="px-6 py-8 text-center text-brand-text/50">ยังไม่มีรายการคอมมิชชัน</td></tr>}</tbody></table></div></>}</div></main>;
+export default async function PartnerPage() {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: partner } = await supabase
+    .from("partners")
+    .select("*")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const site = process.env.NEXT_PUBLIC_SITE_URL || "https://hillpark.vercel.app";
+
+  // ข้อมูลค่าคอม + การถอน (เฉพาะพาร์ทเนอร์ที่อนุมัติแล้ว)
+  let commissions: any[] = [];
+  let payouts: any[] = [];
+  let salesFromLinks = 0;   // ยอดขายที่มาจากลิงก์
+  let pendingComm = 0;      // ค่าคอมรอใช้บริการ (Pending)
+  let availableComm = 0;    // ค่าคอมพร้อมถอน (Available)
+  let withdrawnPaid = 0;    // โอนแล้ว
+  let withdrawnPending = 0; // คำขอถอนที่รออยู่
+  if (partner?.status === "approved") {
+    const [{ data: comms }, { data: pos }] = await Promise.all([
+      supabase.from("partner_commissions").select("*").eq("partner_id", partner.id).order("created_at", { ascending: false }),
+      supabase.from("partner_payouts").select("*").eq("partner_id", partner.id).order("requested_at", { ascending: false }),
+    ]);
+    commissions = comms ?? [];
+    payouts = pos ?? [];
+    salesFromLinks = commissions.filter((c) => c.status !== "void").reduce((s, c) => s + (c.order_amount || 0), 0);
+    pendingComm = commissions.filter((c) => c.status === "pending").reduce((s, c) => s + (c.amount || 0), 0);
+    availableComm = commissions.filter((c) => c.status === "available").reduce((s, c) => s + (c.amount || 0), 0);
+    withdrawnPaid = payouts.filter((p) => p.status === "paid").reduce((s, p) => s + (p.amount || 0), 0);
+    withdrawnPending = payouts.filter((p) => p.status === "pending").reduce((s, p) => s + (p.amount || 0), 0);
+  }
+  // เครดิตที่ถอนได้จริง = คอมพร้อมถอน - ที่โอนไปแล้ว - ที่ค้างอยู่ในคำขอถอน
+  const available = availableComm - withdrawnPaid - withdrawnPending;
+
+  return (
+    <div className="mx-auto w-full max-w-2xl px-4 py-8">
+      <h1 className="flex items-center gap-2 text-2xl font-bold text-brand-text">
+        <Handshake className="text-brand-orange" /> โปรแกรมพาร์ทเนอร์ (แนะนำรับค่าคอม)
+      </h1>
+
+      {/* อนุมัติแล้ว -> แดชบอร์ดพาร์ทเนอร์ */}
+      {partner?.status === "approved" && (
+        <div className="mt-5 space-y-4">
+          <div className="rounded-2xl bg-white p-6 shadow-card">
+            <div className="flex items-center gap-2 text-brand-teal">
+              <Wallet size={20} />
+              <span className="font-semibold">คุณเป็นพาร์ทเนอร์แล้ว</span>
+            </div>
+            <p className="mt-2 text-sm text-brand-text/60">
+              ค่าคอมมิชชันของคุณ: <b className="text-brand-text">{partner.commission_rate}%</b> ต่อการจองที่มาจากลิงก์ของคุณ
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-white p-6 shadow-card">
+            <div className="mb-3 flex items-center gap-2 font-semibold text-brand-text">
+              <Link2 size={18} className="text-brand-orange" /> ลิงก์แนะนำของคุณ
+            </div>
+            <ShareBox link={`${site}/?ref=${partner.ref_code}`} code={partner.ref_code ?? ""} />
+            <p className="mt-3 text-xs text-brand-text/50">
+              แชร์ลิงก์นี้ให้ลูกค้า เมื่อมีคนเข้าเว็บผ่านลิงก์แล้วจอง ระบบจะบันทึกว่ามาจากคุณ
+            </p>
+          </div>
+
+          {/* สรุปค่าคอม (แดชบอร์ด) */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Stat label="ยอดขายจากลิงก์" value={formatTHB(salesFromLinks)} />
+            <Stat label="รอใช้บริการ" value={formatTHB(pendingComm)} />
+            <Stat label="โอนแล้ว" value={formatTHB(withdrawnPaid)} />
+            <Stat label="พร้อมถอน" value={formatTHB(available)} highlight />
+          </div>
+
+          {/* ขอถอนเงิน */}
+          <div className="rounded-2xl bg-white p-6 shadow-card">
+            <div className="mb-3 font-semibold text-brand-text">ขอถอนค่าคอมมิชชัน</div>
+            {available > 0 ? (
+              <form action={requestPayout} className="space-y-3">
+                <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
+                  จำนวนที่ต้องการถอน (บาท) — ถอนได้สูงสุด {formatTHB(available)}
+                  <input name="amount" type="number" min={1} max={available} required className="input" />
+                </label>
+                <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
+                  บัญชีรับเงิน (ธนาคาร / เลขบัญชี / ชื่อบัญชี)
+                  <input name="bank_info" required placeholder="เช่น กสิกรไทย 123-4-56789-0 นายสมชาย ใจดี" className="input" />
+                </label>
+                <button className="btn-primary">ส่งคำขอถอนเงิน</button>
+              </form>
+            ) : (
+              <p className="text-sm text-brand-text/55">ยังไม่มียอดที่ถอนได้ในขณะนี้</p>
+            )}
+          </div>
+
+          {/* ประวัติการถอน */}
+          {payouts.length > 0 && (
+            <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="mb-3 font-semibold text-brand-text">ประวัติการถอน</div>
+              <div className="space-y-2">
+                {payouts.map((p) => (
+                  <div key={p.id} className="flex items-center justify-between border-b border-black/5 pb-2 text-sm last:border-0">
+                    <span className="text-brand-text/70">
+                      {new Date(p.requested_at).toLocaleDateString("th-TH")} · {formatTHB(p.amount)}
+                    </span>
+                    <span className={`font-medium ${(PAYOUT_STATUS[p.status] ?? PAYOUT_STATUS.pending).cls}`}>
+                      {(PAYOUT_STATUS[p.status] ?? PAYOUT_STATUS.pending).text}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* รายการค่าคอม */}
+          <div className="rounded-2xl bg-white p-6 shadow-card">
+            <div className="mb-3 font-semibold text-brand-text">รายการค่าคอมมิชชัน</div>
+            {commissions.length > 0 ? (
+              <div className="space-y-2">
+                {commissions.map((c) => {
+                  const st = COMM_STATUS[c.status] ?? COMM_STATUS.pending;
+                  return (
+                    <div key={c.id} className="flex items-center justify-between border-b border-black/5 pb-2 text-sm last:border-0">
+                      <div>
+                        <div className="text-brand-text/80">
+                          {c.booking_ref || "การจอง"} · ยอด {formatTHB(c.order_amount)}
+                        </div>
+                        <div className="text-xs text-brand-text/45">
+                          {new Date(c.created_at).toLocaleDateString("th-TH")} · คอม {c.rate_at_booking || partner.commission_rate}%
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-brand-text">{formatTHB(c.amount)}</div>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${st.cls}`}>{st.text}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-brand-text/55">
+                ยังไม่มีรายการค่าคอม — จะเริ่มบันทึกอัตโนมัติเมื่อมีลูกค้าจองผ่านลิงก์ของคุณ (หลังระบบบันทึกการจองครบวงจร)
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* รออนุมัติ */}
+      {partner?.status === "pending" && (
+        <div className="mt-5 rounded-2xl bg-white p-8 text-center shadow-card">
+          <Clock size={42} className="mx-auto mb-3 text-brand-orange" />
+          <div className="text-lg font-bold text-brand-text">ใบสมัครของคุณกำลังรอการอนุมัติ</div>
+          <p className="mt-1 text-sm text-brand-text/60">
+            ทีมงานจะตรวจสอบและอนุมัติให้เร็วที่สุด เมื่ออนุมัติแล้วคุณจะได้ลิงก์แนะนำที่นี่
+          </p>
+        </div>
+      )}
+
+      {/* ถูกปฏิเสธ */}
+      {partner?.status === "rejected" && (
+        <div className="mt-5 rounded-2xl bg-white p-8 text-center shadow-card">
+          <XCircle size={42} className="mx-auto mb-3 text-red-500" />
+          <div className="text-lg font-bold text-brand-text">ใบสมัครไม่ได้รับการอนุมัติ</div>
+          <p className="mt-1 text-sm text-brand-text/60">หากมีข้อสงสัย กรุณาติดต่อทีมงาน</p>
+        </div>
+      )}
+
+      {/* ยังไม่เคยสมัคร -> ฟอร์มสมัคร */}
+      {!partner && (
+        <div className="mt-5 rounded-2xl bg-white p-6 shadow-card">
+          <p className="mb-5 text-sm text-brand-text/70">
+            สมัครเป็นพาร์ทเนอร์เพื่อรับลิงก์แนะนำ แชร์ให้ลูกค้าจองทัวร์ แล้วรับค่าคอมมิชชันจากยอดจองที่มาจากลิงก์ของคุณ
+          </p>
+          <form action={applyPartner} className="space-y-4">
+            <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
+              ชื่อร้าน/ธุรกิจ (ถ้ามี)
+              <input name="business_name" placeholder="เช่น ร้านทัวร์อ่าวนาง" className="input" />
+            </label>
+            <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
+              เบอร์ติดต่อ
+              <input name="phone" placeholder="08x-xxx-xxxx" className="input" />
+            </label>
+            <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
+              แนะนำตัว / ช่องทางที่จะโปรโมท
+              <textarea name="note" rows={3} placeholder="เช่น มีเพจเฟซบุ๊ก, กลุ่มไลน์นักท่องเที่ยว ฯลฯ" className="input" />
+            </label>
+            <button className="btn-primary w-full"><Handshake size={18} /> ส่งใบสมัครพาร์ทเนอร์</button>
+          </form>
+        </div>
+      )}
+
+      <div className="mt-6 text-center">
+        <Link href="/account" className="text-sm text-brand-text/50 hover:text-brand-orange">← กลับไปบัญชีของฉัน</Link>
+      </div>
+    </div>
+  );
 }
-function Card({label,value,icon:Icon}:{label:string;value:string;icon:any}) { return <div className="rounded-2xl bg-white p-5 shadow-soft"><Icon className="text-brand-teal" size={21}/><p className="mt-3 text-sm text-brand-text/55">{label}</p><p className="mt-1 text-2xl font-bold">{value}</p></div> }
+
+function Stat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div className={`rounded-2xl p-4 shadow-card ${highlight ? "bg-brand-orange text-white" : "bg-white"}`}>
+      <div className={`text-[11px] ${highlight ? "text-white/80" : "text-brand-text/50"}`}>{label}</div>
+      <div className={`mt-1 text-lg font-bold ${highlight ? "text-white" : "text-brand-green"}`}>{value}</div>
+    </div>
+  );
+}

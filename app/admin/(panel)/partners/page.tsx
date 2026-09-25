@@ -1,14 +1,145 @@
-import { createClient } from "@/lib/supabase/server";
-import { updatePartner } from "./actions";
-import { ExternalLink, Users } from "lucide-react";
+import { createAdminClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/admin/auth";
+import { approvePartner, rejectPartner, updatePayout } from "./actions";
+import { formatTHB } from "@/lib/utils";
+import { Handshake, Check, X, Wallet } from "lucide-react";
 
 export const dynamic = "force-dynamic";
-const labels: Record<string, string> = { guide: "ไกด์", hotel: "โรงแรม", driver: "คนขับรถ", agent: "เอเจนต์", pending: "รอตรวจสอบ", approved: "อนุมัติแล้ว", suspended: "ระงับ", rejected: "ไม่อนุมัติ" };
-const statusStyle: Record<string, string> = { pending: "bg-amber-100 text-amber-800", approved: "bg-emerald-100 text-emerald-800", suspended: "bg-red-100 text-red-700", rejected: "bg-slate-100 text-slate-600" };
 
-export default async function PartnersAdminPage() {
-  const { data: partners } = await createClient().from("partners").select("*").order("created_at", { ascending: false });
-  const pending = (partners ?? []).filter((p) => p.status === "pending").length;
-  return <div><div className="mb-6 flex flex-wrap items-end justify-between gap-3"><div><p className="text-sm font-semibold text-brand-teal">AFFILIATE MANAGEMENT</p><h1 className="text-2xl font-bold text-brand-text">จัดการพาร์ทเนอร์ / ไกด์</h1></div><div className="rounded-xl bg-amber-50 px-4 py-2 text-sm text-amber-800">รอตรวจสอบ {pending} รายการ</div></div>
-    <div className="overflow-hidden rounded-2xl bg-white shadow-soft"><div className="overflow-x-auto"><table className="w-full min-w-[960px] text-sm"><thead className="bg-slate-50 text-left text-brand-text/60"><tr><th className="px-4 py-3">พาร์ทเนอร์</th><th className="px-4 py-3">ประเภท</th><th className="px-4 py-3">ติดต่อ / ธนาคาร</th><th className="px-4 py-3">Affiliate Code</th><th className="px-4 py-3">คอมมิชชัน</th><th className="px-4 py-3">สถานะ</th><th className="px-4 py-3"></th></tr></thead><tbody>{(partners ?? []).map((p) => <tr key={p.id} className="border-t border-black/5 align-top"><td className="px-4 py-4 font-medium"><div>{p.full_name}</div><div className="mt-1 text-xs font-normal text-brand-text/50">สมัคร {new Date(p.created_at).toLocaleDateString("th-TH")}</div></td><td className="px-4 py-4"><span className="rounded-md bg-teal-50 px-2 py-1 text-xs text-teal-800">{labels[p.partner_type]}</span></td><td className="px-4 py-4 text-xs leading-5 text-brand-text/70"><div>{p.phone} {p.line_id && `· LINE ${p.line_id}`}</div><div>{p.bank_name} · {p.bank_account_number}</div><div>{p.bank_account_name}</div></td><td className="px-4 py-4">{p.affiliate_code ? <a href={`/ref/${p.affiliate_code}`} target="_blank" className="inline-flex items-center gap-1 font-semibold text-brand-teal hover:underline">{p.affiliate_code}<ExternalLink size={13}/></a> : <span className="text-brand-text/35">จะสร้างเมื่ออนุมัติ</span>}</td><td className="px-4 py-4">{p.commission_rate}%</td><td className="px-4 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusStyle[p.status]}`}>{labels[p.status]}</span></td><td className="px-4 py-4"><form action={updatePartner} className="flex items-center gap-2"><input type="hidden" name="id" value={p.id}/><input className="w-14 rounded-lg border border-black/10 px-2 py-1.5 text-xs" type="number" name="commission_rate" min="0" max="100" step="0.5" defaultValue={p.commission_rate}/><select name="status" defaultValue={p.status} className="rounded-lg border border-black/10 px-2 py-1.5 text-xs"><option value="pending">รอตรวจสอบ</option><option value="approved">อนุมัติ</option><option value="suspended">ระงับ</option><option value="rejected">ไม่อนุมัติ</option></select><button className="rounded-lg bg-brand-green px-3 py-1.5 text-xs font-medium text-white">บันทึก</button></form></td></tr>)}{!partners?.length && <tr><td colSpan={7} className="px-4 py-14 text-center text-brand-text/50"><Users className="mx-auto mb-2"/>ยังไม่มีใบสมัครพาร์ทเนอร์</td></tr>}</tbody></table></div></div></div>;
+const STATUS_LABEL: Record<string, { text: string; cls: string }> = {
+  pending: { text: "รออนุมัติ", cls: "bg-brand-orange/10 text-brand-orange" },
+  approved: { text: "อนุมัติแล้ว", cls: "bg-brand-teal/10 text-brand-teal" },
+  rejected: { text: "ปฏิเสธ", cls: "bg-red-100 text-red-600" },
+};
+
+export default async function AdminPartnersPage() {
+  await requireAdmin();
+  const admin = createAdminClient();
+
+  const { data: partners } = await admin
+    .from("partners")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  // ดึงอีเมล/ชื่อผู้ใช้มาโชว์
+  const userIds = (partners ?? []).map((p) => p.user_id);
+  const { data: users } = userIds.length
+    ? await admin.from("users").select("id, name, email").in("id", userIds)
+    : { data: [] as any[] };
+  const userMap = new Map((users ?? []).map((u: any) => [u.id, u]));
+
+  // คำขอถอนเงินที่รอดำเนินการ
+  const { data: payouts } = await admin
+    .from("partner_payouts")
+    .select("*")
+    .order("requested_at", { ascending: false });
+  const partnerMap = new Map((partners ?? []).map((p: any) => [p.id, p]));
+  const pendingPayouts = (payouts ?? []).filter((p: any) => p.status === "pending");
+
+  return (
+    <div>
+      <h1 className="mb-6 flex items-center gap-2 text-2xl font-bold text-brand-text">
+        <Handshake className="text-brand-orange" /> พาร์ทเนอร์ (Affiliate)
+      </h1>
+
+      {/* คำขอถอนเงินที่รอดำเนินการ */}
+      {pendingPayouts.length > 0 && (
+        <div className="mb-8">
+          <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-brand-text">
+            <Wallet size={20} className="text-brand-orange" /> คำขอถอนเงิน ({pendingPayouts.length})
+          </h2>
+          <div className="space-y-3">
+            {pendingPayouts.map((po: any) => {
+              const pt = partnerMap.get(po.partner_id);
+              const u = pt ? userMap.get(pt.user_id) : null;
+              return (
+                <div key={po.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white p-5 shadow-soft">
+                  <div>
+                    <div className="font-semibold text-brand-text">
+                      {formatTHB(po.amount)} <span className="ml-2 text-sm font-normal text-brand-text/60">— {pt?.business_name || u?.name || u?.email}</span>
+                    </div>
+                    <div className="mt-1 text-sm text-brand-text/60">บัญชี: {po.bank_info}</div>
+                    <div className="text-xs text-brand-text/45">{new Date(po.requested_at).toLocaleString("th-TH")}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <form action={updatePayout}>
+                      <input type="hidden" name="id" value={po.id} />
+                      <input type="hidden" name="status" value="paid" />
+                      <button className="inline-flex items-center gap-1 rounded-xl bg-brand-teal px-3 py-2 text-sm font-semibold text-white">
+                        <Check size={16} /> โอนแล้ว
+                      </button>
+                    </form>
+                    <form action={updatePayout}>
+                      <input type="hidden" name="id" value={po.id} />
+                      <input type="hidden" name="status" value="rejected" />
+                      <button className="inline-flex items-center gap-1 text-sm text-red-500 hover:text-red-700">
+                        <X size={15} /> ปฏิเสธ
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <h2 className="mb-3 text-lg font-bold text-brand-text">รายชื่อพาร์ทเนอร์</h2>
+      <div className="space-y-3">
+        {(partners ?? []).map((p) => {
+          const u = userMap.get(p.user_id);
+          const st = STATUS_LABEL[p.status] ?? STATUS_LABEL.pending;
+          return (
+            <div key={p.id} className="rounded-2xl bg-white p-5 shadow-soft">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-brand-text">{p.business_name || u?.name || "(ไม่มีชื่อ)"}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${st.cls}`}>{st.text}</span>
+                  </div>
+                  <div className="mt-1 text-sm text-brand-text/60">{u?.email}</div>
+                  {p.phone && <div className="text-sm text-brand-text/60">โทร: {p.phone}</div>}
+                  {p.note && <div className="mt-1 text-sm text-brand-text/70">“{p.note}”</div>}
+                  {p.status === "approved" && (
+                    <div className="mt-2 text-sm">
+                      โค้ด: <b className="text-brand-text">{p.ref_code}</b> · ค่าคอม {p.commission_rate}%
+                    </div>
+                  )}
+                </div>
+
+                {p.status === "pending" && (
+                  <div className="flex flex-col items-end gap-2">
+                    <form action={approvePartner} className="flex items-center gap-2">
+                      <input type="hidden" name="id" value={p.id} />
+                      <input type="hidden" name="user_id" value={p.user_id} />
+                      <input
+                        name="commission_rate"
+                        type="number"
+                        defaultValue={10}
+                        className="input w-24"
+                        title="ค่าคอม %"
+                      />
+                      <span className="text-sm text-brand-text/50">%</span>
+                      <button className="inline-flex items-center gap-1 rounded-xl bg-brand-teal px-3 py-2 text-sm font-semibold text-white">
+                        <Check size={16} /> อนุมัติ
+                      </button>
+                    </form>
+                    <form action={rejectPartner}>
+                      <input type="hidden" name="id" value={p.id} />
+                      <button className="inline-flex items-center gap-1 text-sm text-red-500 hover:text-red-700">
+                        <X size={15} /> ปฏิเสธ
+                      </button>
+                    </form>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+        {(!partners || partners.length === 0) && (
+          <p className="text-sm text-brand-text/50">ยังไม่มีผู้สมัครพาร์ทเนอร์</p>
+        )}
+      </div>
+    </div>
+  );
 }

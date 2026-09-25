@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { User, LogOut, ClipboardList } from "lucide-react";
+import { User, LogOut, ClipboardList, Handshake } from "lucide-react";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -60,6 +60,14 @@ export default function AccountPage() {
         >
           <ClipboardList size={20} className="text-brand-teal" />
           <span className="font-medium text-brand-text">การจองของฉัน</span>
+        </Link>
+
+        <Link
+          href="/partner"
+          className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-card transition hover:-translate-y-0.5"
+        >
+          <Handshake size={20} className="text-brand-orange" />
+          <span className="font-medium text-brand-text">โปรแกรมพาร์ทเนอร์ (แนะนำรับค่าคอม)</span>
         </Link>
 
         <button
