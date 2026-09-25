@@ -1,8 +1,9 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, BadgeCheck, Banknote, Clock3, QrCode, ShieldCheck, Users } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 const partnerTypes = [
   ["guide", "ไกด์ท้องถิ่น"], ["hotel", "โรงแรม / ที่พัก"], ["driver", "คนขับรถ"], ["agent", "เอเจนต์ท่องเที่ยว"],
@@ -12,6 +13,8 @@ export default function PartnerApplyPage() {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  useEffect(() => { createClient().auth.getUser().then(({ data }) => setSignedIn(Boolean(data.user))); }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setLoading(true); setError("");
@@ -38,7 +41,8 @@ export default function PartnerApplyPage() {
           <div className="mt-8 rounded-2xl bg-teal-50 p-4 text-sm text-teal-950"><ShieldCheck className="mb-2 text-brand-teal" size={21}/>รายการยกเลิกหรือคืนเงินจะถูกปรับเครดิตอัตโนมัติ เพื่อให้ยอดคอมมิชชันถูกต้องเสมอ</div>
         </div>
         <div className="rounded-3xl bg-white p-7 shadow-card lg:p-9">{sent ? <Success /> : <><div className="flex items-start justify-between gap-4"><div><p className="text-sm font-semibold text-brand-teal">PARTNER APPLICATION</p><h2 className="mt-1 text-2xl font-bold text-brand-text">สมัครเป็นพาร์ทเนอร์</h2><p className="mt-1 text-sm text-brand-text/60">ทีมงานจะตรวจสอบและติดต่อกลับภายใน 1–2 วันทำการ</p></div><Clock3 className="text-brand-teal" /></div>
-          <form onSubmit={submit} className="mt-7 grid gap-4 sm:grid-cols-2"><Field name="full_name" label="ชื่อ – นามสกุล" required/><Field name="phone" label="เบอร์โทรศัพท์" type="tel" required/><Field name="line_id" label="LINE ID"/><label className="sm:col-span-2"><span className="label">ประเภทพาร์ทเนอร์</span><select name="partner_type" className="input" defaultValue="guide">{partnerTypes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><Field name="bank_name" label="ธนาคาร" required/><Field name="bank_account_name" label="ชื่อบัญชี" required/><Field name="bank_account_number" label="เลขที่บัญชี" required/><div className="sm:col-span-2 rounded-xl bg-slate-50 px-4 py-3 text-xs text-brand-text/55">ส่งใบสมัครแล้วจะอยู่ในสถานะ “รอตรวจสอบ” จนกว่า Admin จะอนุมัติ</div>{error && <p className="sm:col-span-2 text-sm text-red-600">{error}</p>}<button disabled={loading} className="btn-primary sm:col-span-2">{loading ? "กำลังส่งใบสมัคร..." : <>ส่งใบสมัคร <ArrowRight size={18}/></>}</button></form></>}</div>
+          {signedIn === false && <div className="mt-5 rounded-xl bg-teal-50 p-4 text-sm text-teal-950">สร้างบัญชีสำหรับเข้า Partner Portal ด้านล่างได้เลย หากมีบัญชีอยู่แล้ว <Link href="/login?next=/partners" className="font-semibold underline">เข้าสู่ระบบที่นี่</Link></div>}
+          <form onSubmit={submit} className="mt-7 grid gap-4 sm:grid-cols-2">{signedIn === false && <><div className="sm:col-span-2"><p className="mb-2 text-sm font-semibold text-brand-teal">ข้อมูลสำหรับเข้าสู่ระบบ Partner Portal</p></div><Field name="email" label="อีเมลสำหรับเข้าสู่ระบบ" type="email" required/><Field name="password" label="ตั้งรหัสผ่าน (อย่างน้อย 6 ตัวอักษร)" type="password" required/></>}<Field name="full_name" label="ชื่อ – นามสกุล" required/><Field name="phone" label="เบอร์โทรศัพท์" type="tel" required/><Field name="line_id" label="LINE ID"/><label className="sm:col-span-2"><span className="label">ประเภทพาร์ทเนอร์</span><select name="partner_type" className="input" defaultValue="guide">{partnerTypes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><Field name="bank_name" label="ธนาคาร" required/><Field name="bank_account_name" label="ชื่อบัญชี" required/><Field name="bank_account_number" label="เลขที่บัญชี" required/><div className="sm:col-span-2 rounded-xl bg-slate-50 px-4 py-3 text-xs text-brand-text/55">ส่งใบสมัครแล้วจะอยู่ในสถานะ “รอตรวจสอบ” จนกว่า Admin จะอนุมัติ</div>{error && <p className="sm:col-span-2 text-sm text-red-600">{error}</p>}<button disabled={loading || signedIn === null} className="btn-primary sm:col-span-2">{loading ? "กำลังส่งใบสมัคร..." : <>ส่งใบสมัคร <ArrowRight size={18}/></>}</button></form></>}</div>
       </div></section>
     </div>
   );
