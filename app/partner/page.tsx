@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { applyPartner, requestPayout } from "./actions";
 import { ShareBox } from "@/components/partner/share-box";
 import { formatTHB } from "@/lib/utils";
+import { THAI_BANKS } from "@/lib/partner/banks";
 
 const PAYOUT_STATUS: Record<string, { text: string; cls: string }> = {
   pending: { text: "รอโอน", cls: "text-brand-orange" },
@@ -57,8 +58,9 @@ export default async function PartnerPage() {
     withdrawnPaid = payouts.filter((p) => p.status === "paid").reduce((s, p) => s + (p.amount || 0), 0);
     withdrawnPending = payouts.filter((p) => p.status === "pending").reduce((s, p) => s + (p.amount || 0), 0);
   }
-  // เครดิตที่ถอนได้จริง = คอมพร้อมถอน - ที่โอนไปแล้ว - ที่ค้างอยู่ในคำขอถอน
-  const available = availableComm - withdrawnPaid - withdrawnPending;
+  // เครดิตที่ถอนได้จริง = คอมพร้อมถอน - ที่ค้างอยู่ในคำขอถอน
+  // (เมื่อแอดมินโอนแล้ว ค่าคอมส่วนนั้นจะถูกล็อกเป็น "จ่ายแล้ว" อัตโนมัติ จึงไม่ต้องหักซ้ำ)
+  const available = availableComm - withdrawnPending;
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-8">
@@ -106,10 +108,14 @@ export default async function PartnerPage() {
                   จำนวนที่ต้องการถอน (บาท) — ถอนได้สูงสุด {formatTHB(available)}
                   <input name="amount" type="number" min={1} max={available} required className="input" />
                 </label>
-                <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
-                  บัญชีรับเงิน (ธนาคาร / เลขบัญชี / ชื่อบัญชี)
-                  <input name="bank_info" required placeholder="เช่น กสิกรไทย 123-4-56789-0 นายสมชาย ใจดี" className="input" />
-                </label>
+                <div className="rounded-xl bg-brand-bg px-4 py-3 text-sm">
+                  <div className="text-xs text-brand-text/50">โอนเข้าบัญชีที่ลงทะเบียนไว้</div>
+                  <div className="font-medium text-brand-text">{partner.bank_name || "-"}</div>
+                  <div className="text-brand-text/70">
+                    {partner.bank_account_no || "-"} · {partner.bank_account_name || "-"}
+                  </div>
+                  <div className="mt-1 text-[11px] text-brand-text/45">ต้องการเปลี่ยนบัญชี กรุณาติดต่อผู้ดูแลระบบ</div>
+                </div>
                 <button className="btn-primary">ส่งคำขอถอนเงิน</button>
               </form>
             ) : (
@@ -190,6 +196,15 @@ export default async function PartnerPage() {
         </div>
       )}
 
+      {/* ถูกระงับ */}
+      {partner?.status === "suspended" && (
+        <div className="mt-5 rounded-2xl bg-white p-8 text-center shadow-card">
+          <XCircle size={42} className="mx-auto mb-3 text-brand-text/40" />
+          <div className="text-lg font-bold text-brand-text">บัญชีพาร์ทเนอร์ถูกระงับชั่วคราว</div>
+          <p className="mt-1 text-sm text-brand-text/60">กรุณาติดต่อทีมงานเพื่อสอบถามรายละเอียด</p>
+        </div>
+      )}
+
       {/* ยังไม่เคยสมัคร -> ฟอร์มสมัคร */}
       {!partner && (
         <div className="mt-5 rounded-2xl bg-white p-6 shadow-card">
@@ -205,10 +220,29 @@ export default async function PartnerPage() {
               เบอร์ติดต่อ
               <input name="phone" placeholder="08x-xxx-xxxx" className="input" />
             </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
-              แนะนำตัว / ช่องทางที่จะโปรโมท
-              <textarea name="note" rows={3} placeholder="เช่น มีเพจเฟซบุ๊ก, กลุ่มไลน์นักท่องเที่ยว ฯลฯ" className="input" />
-            </label>
+            <div className="rounded-xl bg-brand-bg p-4">
+              <div className="mb-3 text-sm font-semibold text-brand-text">บัญชีธนาคารสำหรับรับค่าคอม</div>
+              <div className="space-y-3">
+                <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
+                  ธนาคาร *
+                  <select name="bank_name" required defaultValue="" className="input">
+                    <option value="" disabled>— เลือกธนาคาร —</option>
+                    {THAI_BANKS.map((b) => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
+                  ชื่อบัญชี *
+                  <input name="bank_account_name" required placeholder="ชื่อ-นามสกุล ตามหน้าสมุดบัญชี" className="input" />
+                </label>
+                <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
+                  เลขบัญชี *
+                  <input name="bank_account_no" required inputMode="numeric" placeholder="เช่น 123-4-56789-0" className="input" />
+                </label>
+              </div>
+              <p className="mt-2 text-[11px] text-brand-text/45">ข้อมูลนี้ใช้สำหรับโอนค่าคอมให้คุณเท่านั้น</p>
+            </div>
             <button className="btn-primary w-full"><Handshake size={18} /> ส่งใบสมัครพาร์ทเนอร์</button>
           </form>
         </div>

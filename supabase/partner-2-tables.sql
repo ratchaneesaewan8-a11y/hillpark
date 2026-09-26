@@ -23,13 +23,11 @@ drop policy if exists "partner read own" on public.partners;
 create policy "partner read own" on public.partners
   for select using (user_id = auth.uid() or public.is_admin());
 
+-- การเขียนข้อมูล (สมัคร/แก้ไข) ทำผ่าน server เท่านั้น -> ผู้ใช้ทั่วไปไม่มีสิทธิ์ insert/update ตรง
 drop policy if exists "partner apply own" on public.partners;
-create policy "partner apply own" on public.partners
-  for insert with check (user_id = auth.uid());
-
 drop policy if exists "partner admin update" on public.partners;
 create policy "partner admin update" on public.partners
-  for update using (public.is_admin() or user_id = auth.uid());
+  for update using (public.is_admin());
 
 -- ตารางค่าคอมมิชชัน
 create table if not exists public.partner_commissions (
@@ -71,11 +69,8 @@ create policy "payout read own" on public.partner_payouts
     or partner_id in (select id from public.partners where user_id = auth.uid())
   );
 
+-- คำขอถอนสร้างผ่าน server เท่านั้น (ตรวจยอดคงเหลือก่อนเสมอ)
 drop policy if exists "payout create own" on public.partner_payouts;
-create policy "payout create own" on public.partner_payouts
-  for insert with check (
-    partner_id in (select id from public.partners where user_id = auth.uid())
-  );
 
 drop policy if exists "payout admin update" on public.partner_payouts;
 create policy "payout admin update" on public.partner_payouts

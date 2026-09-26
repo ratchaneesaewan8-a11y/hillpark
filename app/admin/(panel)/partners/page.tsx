@@ -2,7 +2,8 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/auth";
 import { approvePartner, rejectPartner, updatePayout } from "./actions";
 import { formatTHB } from "@/lib/utils";
-import { Handshake, Check, X, Wallet } from "lucide-react";
+import Link from "next/link";
+import { Handshake, Check, X, Wallet, ChevronRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ const STATUS_LABEL: Record<string, { text: string; cls: string }> = {
   pending: { text: "รออนุมัติ", cls: "bg-brand-orange/10 text-brand-orange" },
   approved: { text: "อนุมัติแล้ว", cls: "bg-brand-teal/10 text-brand-teal" },
   rejected: { text: "ปฏิเสธ", cls: "bg-red-100 text-red-600" },
+  suspended: { text: "ระงับ", cls: "bg-black/10 text-brand-text/60" },
 };
 
 export default async function AdminPartnersPage() {
@@ -61,10 +63,11 @@ export default async function AdminPartnersPage() {
                     <div className="mt-1 text-sm text-brand-text/60">บัญชี: {po.bank_info}</div>
                     <div className="text-xs text-brand-text/45">{new Date(po.requested_at).toLocaleString("th-TH")}</div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <form action={updatePayout}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <form action={updatePayout} className="flex items-center gap-2">
                       <input type="hidden" name="id" value={po.id} />
                       <input type="hidden" name="status" value="paid" />
+                      <input name="transfer_ref" placeholder="เลขอ้างอิงการโอน" className="input w-40" />
                       <button className="inline-flex items-center gap-1 rounded-xl bg-brand-teal px-3 py-2 text-sm font-semibold text-white">
                         <Check size={16} /> โอนแล้ว
                       </button>
@@ -94,12 +97,24 @@ export default async function AdminPartnersPage() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-brand-text">{p.business_name || u?.name || "(ไม่มีชื่อ)"}</span>
+                    <Link href={`/admin/partners/${p.id}`} className="font-semibold text-brand-text hover:text-brand-orange">
+                      {p.business_name || u?.name || "(ไม่มีชื่อ)"}
+                    </Link>
                     <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${st.cls}`}>{st.text}</span>
                   </div>
                   <div className="mt-1 text-sm text-brand-text/60">{u?.email}</div>
                   {p.phone && <div className="text-sm text-brand-text/60">โทร: {p.phone}</div>}
-                  {p.note && <div className="mt-1 text-sm text-brand-text/70">“{p.note}”</div>}
+                  {p.bank_name && (
+                    <div className="mt-1 text-sm text-brand-text/60">
+                      บัญชี: {p.bank_name} · {p.bank_account_no} · {p.bank_account_name}
+                    </div>
+                  )}
+                  <Link
+                    href={`/admin/partners/${p.id}`}
+                    className="mt-2 inline-flex items-center gap-0.5 text-sm font-semibold text-brand-orange hover:underline"
+                  >
+                    ดูข้อมูล / จัดการค่าคอม <ChevronRight size={15} />
+                  </Link>
                   {p.status === "approved" && (
                     <div className="mt-2 text-sm">
                       โค้ด: <b className="text-brand-text">{p.ref_code}</b> · ค่าคอม {p.commission_rate}%
