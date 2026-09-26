@@ -4,7 +4,7 @@ import { ArrowLeft, Check, X, Plus, Save, Landmark, Wallet, ReceiptText } from "
 import { createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/auth";
 import { formatTHB } from "@/lib/utils";
-import { THAI_BANKS } from "@/lib/partner/banks";
+import { THAI_BANKS, PARTNER_TYPES, partnerTypeLabel } from "@/lib/partner/banks";
 import {
   approvePartner,
   updatePartner,
@@ -60,7 +60,9 @@ export default async function AdminPartnerDetailPage({ params }: { params: { id:
   const withdrawable = availableComm - pendingPayout;
 
   const st = PARTNER_STATUS[p.status] ?? PARTNER_STATUS.pending;
-  const displayName = p.business_name || u?.name || u?.email || "(ไม่มีชื่อ)";
+  const displayName = p.business_name || p.full_name || u?.name || u?.email || "(ไม่มีชื่อ)";
+  const refCode = p.ref_code || p.affiliate_code;
+  const accountNo = p.bank_account_no || p.bank_account_number;
 
   return (
     <div className="space-y-6">
@@ -73,8 +75,8 @@ export default async function AdminPartnerDetailPage({ params }: { params: { id:
           <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${st.cls}`}>{st.text}</span>
         </div>
         <div className="mt-1 text-sm text-brand-text/60">
-          {u?.email} {p.phone && `· โทร ${p.phone}`}
-          {p.ref_code && <> · โค้ด <b className="text-brand-text">{p.ref_code}</b></>}
+          {p.full_name && `${p.full_name} · `}{partnerTypeLabel(p.partner_type)} · {u?.email} {p.phone && `· โทร ${p.phone}`}
+          {refCode && <> · โค้ด <b className="text-brand-text">{refCode}</b></>}
           {" "}· สมัครเมื่อ {new Date(p.created_at).toLocaleDateString("th-TH")}
         </div>
       </div>
@@ -109,6 +111,16 @@ export default async function AdminPartnerDetailPage({ params }: { params: { id:
         </h2>
         <form action={updatePartner} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <input type="hidden" name="id" value={p.id} />
+          <Field label="ชื่อ-นามสกุล">
+            <input name="full_name" defaultValue={p.full_name ?? ""} className="input" />
+          </Field>
+          <Field label="ประเภทพาร์ทเนอร์">
+            <select name="partner_type" defaultValue={p.partner_type ?? "agent"} className="input">
+              {PARTNER_TYPES.map((t) => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+          </Field>
           <Field label="ชื่อร้าน/ธุรกิจ">
             <input name="business_name" defaultValue={p.business_name ?? ""} className="input" />
           </Field>
@@ -131,7 +143,7 @@ export default async function AdminPartnerDetailPage({ params }: { params: { id:
             <input name="bank_account_name" defaultValue={p.bank_account_name ?? ""} className="input" />
           </Field>
           <Field label="เลขบัญชี">
-            <input name="bank_account_no" defaultValue={p.bank_account_no ?? ""} className="input" />
+            <input name="bank_account_no" defaultValue={accountNo ?? ""} className="input" />
           </Field>
           <Field label="สถานะพาร์ทเนอร์">
             <select name="status" defaultValue={p.status} className="input">

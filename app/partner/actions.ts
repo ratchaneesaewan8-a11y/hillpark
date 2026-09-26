@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { PARTNER_TYPE_VALUES } from "@/lib/partner/banks";
 
 // สมัครเป็นพาร์ทเนอร์ (ผู้ใช้ที่ล็อกอินอยู่)
 export async function applyPartner(formData: FormData) {
@@ -13,13 +14,19 @@ export async function applyPartner(formData: FormData) {
   if (!user) redirect("/login");
 
   const val = (k: string) => ((formData.get(k) as string) || "").trim();
+  const accountNo = val("bank_account_no").replace(/[^0-9-]/g, "");
   const fields = {
+    full_name: val("full_name"),
+    partner_type: val("partner_type"),
     business_name: val("business_name") || null,
-    phone: val("phone") || null,
+    phone: val("phone"),
     bank_name: val("bank_name"),
     bank_account_name: val("bank_account_name"),
-    bank_account_no: val("bank_account_no").replace(/[^0-9-]/g, ""),
+    bank_account_no: accountNo,
+    bank_account_number: accountNo, // คอลัมน์เดิมในฐานข้อมูล (บังคับกรอก)
   };
+  if (!fields.full_name || !fields.phone) throw new Error("กรุณากรอกชื่อ-นามสกุลและเบอร์โทร");
+  if (!PARTNER_TYPE_VALUES.includes(fields.partner_type)) throw new Error("กรุณาเลือกประเภทพาร์ทเนอร์");
   if (!fields.bank_name || !fields.bank_account_name || !fields.bank_account_no) {
     throw new Error("กรุณากรอกข้อมูลบัญชีธนาคารให้ครบ");
   }
@@ -66,14 +73,14 @@ export async function requestPayout(formData: FormData) {
   const db = createAdminClient();
   const { data: partner } = await db
     .from("partners")
-    .select("id, status, bank_name, bank_account_name, bank_account_no")
+    .select("id, status, bank_name, bank_account_name, bank_account_no, bank_account_number")
     .eq("user_id", user.id)
     .maybeSingle();
   if (!partner || partner.status !== "approved") throw new Error("คุณยังไม่ใช่พาร์ทเนอร์ที่อนุมัติแล้ว");
 
   const amount = Math.floor(Number(formData.get("amount") || 0));
   // ใช้บัญชีธนาคารที่ลงทะเบียนไว้ตอนสมัคร
-  const bankInfo = [partner.bank_name, partner.bank_account_no, partner.bank_account_name]
+  const bankInfo = [partner.bank_name, partner.bank_account_no || partner.bank_account_number, partner.bank_account_name]
     .filter(Boolean)
     .join(" · ");
   if (amount <= 0) throw new Error("จำนวนเงินไม่ถูกต้อง");

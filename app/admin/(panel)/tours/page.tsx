@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { deleteTour } from "./actions";
 import { formatTHB } from "@/lib/utils";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import { TourActiveToggle } from "@/components/admin/tour-active-toggle";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,7 @@ export default async function AdminToursPage() {
             <tr>
               <th className="px-4 py-3">ชื่อทัวร์</th>
               <th className="px-4 py-3">ราคาเริ่มต้น</th>
-              <th className="px-4 py-3">สถานะ</th>
+              <th className="px-4 py-3">แสดงบนเว็บ</th>
               <th className="px-4 py-3"></th>
             </tr>
           </thead>
@@ -39,8 +40,10 @@ export default async function AdminToursPage() {
                 </td>
                 <td className="px-4 py-3">{formatTHB(t.base_price)}</td>
                 <td className="px-4 py-3">
-                  {t.active ? <span className="text-brand-teal">เปิด</span> : <span className="text-brand-text/40">ปิด</span>}
-                  {t.popular && <span className="ml-2 rounded bg-brand-orange/10 px-1.5 py-0.5 text-xs text-brand-orange">ยอดนิยม</span>}
+                  <div className="flex items-center gap-2">
+                    <TourActiveToggle id={t.id} initial={!!t.active} />
+                    {t.popular && <span className="rounded bg-brand-orange/10 px-1.5 py-0.5 text-xs text-brand-orange">ยอดนิยม</span>}
+                  </div>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-3">

@@ -38,7 +38,7 @@ async function createCommission(db: Db, refCode: string | null, bookingNumber: s
   const { data: partner } = await db
     .from("partners")
     .select("id, status, commission_rate")
-    .eq("ref_code", refCode)
+    .or(`ref_code.eq.${refCode},affiliate_code.eq.${refCode}`) // refCode ถูกกรองให้เหลือ A-Z 0-9 - แล้ว
     .maybeSingle();
   if (!partner || partner.status !== "approved") return;
 
@@ -50,12 +50,12 @@ async function createCommission(db: Db, refCode: string | null, bookingNumber: s
     .maybeSingle();
   if (exists) return;
 
-  const rate = partner.commission_rate ?? 0;
+  const rate = Number(partner.commission_rate ?? 0);
   await db.from("partner_commissions").insert({
     partner_id: partner.id,
     booking_ref: bookingNumber,
     order_amount: total,
-    rate_at_booking: rate, // ล็อกอัตรา ณ วันจอง
+    rate_at_booking: Math.round(rate), // ล็อกอัตรา ณ วันจอง
     amount: Math.round((total * rate) / 100),
     status: "pending", // ชำระแล้ว รอลูกค้าใช้บริการ
   });

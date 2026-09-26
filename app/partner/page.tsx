@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { applyPartner, requestPayout } from "./actions";
 import { ShareBox } from "@/components/partner/share-box";
 import { formatTHB } from "@/lib/utils";
-import { THAI_BANKS } from "@/lib/partner/banks";
+import { THAI_BANKS, PARTNER_TYPES } from "@/lib/partner/banks";
 
 const PAYOUT_STATUS: Record<string, { text: string; cls: string }> = {
   pending: { text: "รอโอน", cls: "text-brand-orange" },
@@ -85,7 +85,10 @@ export default async function PartnerPage() {
             <div className="mb-3 flex items-center gap-2 font-semibold text-brand-text">
               <Link2 size={18} className="text-brand-orange" /> ลิงก์แนะนำของคุณ
             </div>
-            <ShareBox link={`${site}/?ref=${partner.ref_code}`} code={partner.ref_code ?? ""} />
+            <ShareBox
+              link={`${site}/?ref=${partner.ref_code || partner.affiliate_code}`}
+              code={partner.ref_code || partner.affiliate_code || ""}
+            />
             <p className="mt-3 text-xs text-brand-text/50">
               แชร์ลิงก์นี้ให้ลูกค้า เมื่อมีคนเข้าเว็บผ่านลิงก์แล้วจอง ระบบจะบันทึกว่ามาจากคุณ
             </p>
@@ -112,7 +115,7 @@ export default async function PartnerPage() {
                   <div className="text-xs text-brand-text/50">โอนเข้าบัญชีที่ลงทะเบียนไว้</div>
                   <div className="font-medium text-brand-text">{partner.bank_name || "-"}</div>
                   <div className="text-brand-text/70">
-                    {partner.bank_account_no || "-"} · {partner.bank_account_name || "-"}
+                    {partner.bank_account_no || partner.bank_account_number || "-"} · {partner.bank_account_name || "-"}
                   </div>
                   <div className="mt-1 text-[11px] text-brand-text/45">ต้องการเปลี่ยนบัญชี กรุณาติดต่อผู้ดูแลระบบ</div>
                 </div>
@@ -213,12 +216,25 @@ export default async function PartnerPage() {
           </p>
           <form action={applyPartner} className="space-y-4">
             <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
+              ชื่อ-นามสกุล *
+              <input name="full_name" required placeholder="ชื่อ-นามสกุลของคุณ" className="input" />
+            </label>
+            <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
+              ประเภทพาร์ทเนอร์ *
+              <select name="partner_type" required defaultValue="" className="input">
+                <option value="" disabled>— เลือกประเภท —</option>
+                {PARTNER_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
               ชื่อร้าน/ธุรกิจ (ถ้ามี)
               <input name="business_name" placeholder="เช่น ร้านทัวร์อ่าวนาง" className="input" />
             </label>
             <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
-              เบอร์ติดต่อ
-              <input name="phone" placeholder="08x-xxx-xxxx" className="input" />
+              เบอร์ติดต่อ *
+              <input name="phone" required placeholder="08x-xxx-xxxx" className="input" />
             </label>
             <div className="rounded-xl bg-brand-bg p-4">
               <div className="mb-3 text-sm font-semibold text-brand-text">บัญชีธนาคารสำหรับรับค่าคอม</div>

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/auth";
+import { PARTNER_TYPE_VALUES } from "@/lib/partner/banks";
 
 // สร้างโค้ดแนะนำแบบสุ่มสั้นๆ เช่น HP7K3M9Q
 function genRefCode() {
@@ -27,13 +28,19 @@ export async function approvePartner(formData: FormData) {
   const userId = formData.get("user_id") as string;
   const rate = Number(formData.get("commission_rate") || 10);
 
-  const { data: current } = await admin.from("partners").select("ref_code").eq("id", id).single();
+  const { data: current } = await admin
+    .from("partners")
+    .select("ref_code, affiliate_code")
+    .eq("id", id)
+    .single();
+  const code = current?.ref_code || current?.affiliate_code || genRefCode(); // อนุมัติซ้ำใช้โค้ดเดิม
 
   const { error } = await admin
     .from("partners")
     .update({
       status: "approved",
-      ref_code: current?.ref_code || genRefCode(), // อนุมัติซ้ำ (หลังระงับ) ใช้โค้ดเดิม
+      ref_code: code,
+      affiliate_code: code, // คอลัมน์เดิมในฐานข้อมูล เก็บค่าเดียวกัน
       commission_rate: rate,
       approved_at: new Date().toISOString(),
     })
@@ -70,14 +77,23 @@ export async function updatePartner(formData: FormData) {
   const allowed = ["pending", "approved", "suspended", "rejected"];
   if (!allowed.includes(status)) throw new Error("สถานะไม่ถูกต้อง");
 
+  const partnerType = val("partner_type");
+  if (!PARTNER_TYPE_VALUES.includes(partnerType)) throw new Error("ประเภทพาร์ทเนอร์ไม่ถูกต้อง");
+  const accountNo = val("bank_account_no");
+
+  // คอลัมน์ที่ฐานข้อมูลบังคับกรอก (full_name, phone, bank_*) ใช้ค่าว่างแทน null
   const { error } = await admin
     .from("partners")
     .update({
+      full_name: val("full_name"),
+      partner_type: partnerType,
       business_name: val("business_name") || null,
-      phone: val("phone") || null,
-      bank_name: val("bank_name") || null,
-      bank_account_name: val("bank_account_name") || null,
-      bank_account_no: val("bank_account_no") || null,
+      phone: val("phone"),
+      bank_name: val("bank_name"),
+      bank_account_name: val("bank_account_name"),
+      bank_account_no: accountNo,
+      bank_account_number: accountNo,
+      updated_at: new Date().toISOString(),
       commission_rate: Math.max(0, Math.min(100, Number(val("commission_rate") || 0))),
       status,
     })

@@ -104,3 +104,14 @@ export async function deleteGalleryImage(formData: FormData) {
   await supabase.from("tour_images").delete().eq("id", formData.get("id") as string);
   revalidatePath(`/admin/tours/${tourId}`);
 }
+
+// ---------- เปิด/ปิดทัวร์ (สวิตช์ในหน้ารายการทัวร์) ----------
+export async function setTourActive(id: string, active: boolean) {
+  await requireAdmin();
+  const supabase = createClient();
+  const { error } = await supabase.from("tours").update({ active }).eq("id", id);
+  if (error) throw new Error(`เปลี่ยนสถานะทัวร์ไม่สำเร็จ: ${error.message}`);
+  revalidatePath("/admin/tours");
+  revalidatePath("/");
+  revalidatePath("/tours", "layout");
+}

@@ -16,3 +16,15 @@ export const THAI_BANKS = [
   "ธนาคารทิสโก้ (TISCO)",
   "พร้อมเพย์ (PromptPay)",
 ];
+
+// ประเภทพาร์ทเนอร์ (ตรงกับ enum partner_type ในฐานข้อมูล)
+export const PARTNER_TYPES = [
+  { value: "guide", label: "ไกด์ / ผู้นำเที่ยว" },
+  { value: "hotel", label: "โรงแรม / ที่พัก" },
+  { value: "driver", label: "คนขับรถ / รถรับส่ง" },
+  { value: "agent", label: "เอเจนซี่ / ตัวแทนขายทัวร์" },
+];
+export const PARTNER_TYPE_VALUES = PARTNER_TYPES.map((t) => t.value);
+export function partnerTypeLabel(v?: string | null) {
+  return PARTNER_TYPES.find((t) => t.value === v)?.label ?? "-";
+}

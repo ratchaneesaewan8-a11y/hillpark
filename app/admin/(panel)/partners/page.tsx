@@ -58,7 +58,7 @@ export default async function AdminPartnersPage() {
                 <div key={po.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white p-5 shadow-soft">
                   <div>
                     <div className="font-semibold text-brand-text">
-                      {formatTHB(po.amount)} <span className="ml-2 text-sm font-normal text-brand-text/60">— {pt?.business_name || u?.name || u?.email}</span>
+                      {formatTHB(po.amount)} <span className="ml-2 text-sm font-normal text-brand-text/60">— {pt?.business_name || pt?.full_name || u?.name || u?.email}</span>
                     </div>
                     <div className="mt-1 text-sm text-brand-text/60">บัญชี: {po.bank_info}</div>
                     <div className="text-xs text-brand-text/45">{new Date(po.requested_at).toLocaleString("th-TH")}</div>
@@ -98,7 +98,7 @@ export default async function AdminPartnersPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <Link href={`/admin/partners/${p.id}`} className="font-semibold text-brand-text hover:text-brand-orange">
-                      {p.business_name || u?.name || "(ไม่มีชื่อ)"}
+                      {p.business_name || p.full_name || u?.name || "(ไม่มีชื่อ)"}
                     </Link>
                     <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${st.cls}`}>{st.text}</span>
                   </div>
@@ -106,7 +106,7 @@ export default async function AdminPartnersPage() {
                   {p.phone && <div className="text-sm text-brand-text/60">โทร: {p.phone}</div>}
                   {p.bank_name && (
                     <div className="mt-1 text-sm text-brand-text/60">
-                      บัญชี: {p.bank_name} · {p.bank_account_no} · {p.bank_account_name}
+                      บัญชี: {p.bank_name} · {p.bank_account_no || p.bank_account_number} · {p.bank_account_name}
                     </div>
                   )}
                   <Link
@@ -117,7 +117,7 @@ export default async function AdminPartnersPage() {
                   </Link>
                   {p.status === "approved" && (
                     <div className="mt-2 text-sm">
-                      โค้ด: <b className="text-brand-text">{p.ref_code}</b> · ค่าคอม {p.commission_rate}%
+                      โค้ด: <b className="text-brand-text">{p.ref_code || p.affiliate_code}</b> · ค่าคอม {p.commission_rate}%
                     </div>
                   )}
                 </div>
