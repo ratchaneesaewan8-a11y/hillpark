@@ -65,7 +65,14 @@ async function createCommission(db: Db, refCode: string | null, bookingNumber: s
 async function recordPaymentLinkSale(db: Db, session: Stripe.Checkout.Session) {
   const { packageId, refCode } = parseClientReference(session.client_reference_id);
   const paid = session.payment_status === "paid" || session.payment_status === "no_payment_required";
-  const total = Math.round((session.amount_total ?? 0) / 100); // สตางค์ -> บาท
+  // Adaptive Pricing: ถ้าลูกค้าต่างชาติจ่ายเป็นสกุลเงินตัวเอง ให้ใช้ยอดเดิมเป็นบาท (source currency)
+  const conv = (session as any).currency_conversion as
+    | { amount_total?: number; source_currency?: string }
+    | null
+    | undefined;
+  const totalMinor = conv?.amount_total ?? session.amount_total ?? 0;
+  const currency = conv?.source_currency ?? session.currency ?? "thb";
+  const total = Math.round(totalMinor / 100); // สตางค์ -> บาท
 
   // มีการจองจาก session นี้แล้ว (Stripe ส่ง event ซ้ำได้)
   const { data: existing } = await db
@@ -112,7 +119,7 @@ async function recordPaymentLinkSale(db: Db, session: Stripe.Checkout.Session) {
       adults: qty,
       subtotal: total,
       total,
-      currency: session.currency ?? "thb",
+      currency,
       payment_status: paid ? "paid" : "unpaid",
       booking_status: paid ? "PAID" : "PENDING_PAYMENT",
       stripe_session_id: session.id,
