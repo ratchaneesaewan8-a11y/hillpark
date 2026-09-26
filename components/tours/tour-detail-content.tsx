@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Star, Clock, MapPin } from "lucide-react";
 import type { Tour, Package } from "@/lib/types";
 import { formatTHB } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { readRefCode, buildPaymentUrl } from "@/lib/partner/ref";
 
 export function TourDetailContent({
   tour,
@@ -19,6 +21,12 @@ export function TourDetailContent({
   const title = lang === "en" && tour.title_en ? tour.title_en : tour.title_th;
   const description = lang === "en" && tour.description_en ? tour.description_en : tour.description_th;
   const reviewLabel = lang === "en" ? "reviews" : "รีวิว";
+
+  // โค้ดพาร์ทเนอร์ (ถ้าลูกค้าเข้ามาผ่านลิงก์แนะนำ) -> แนบไปกับลิงก์จ่ายเงิน Stripe
+  const [refCode, setRefCode] = useState<string | null>(null);
+  useEffect(() => {
+    setRefCode(readRefCode());
+  }, []);
 
   return (
     <div className="grid gap-8 lg:grid-cols-3">
@@ -91,7 +99,7 @@ export function TourDetailContent({
                     </div>
                     {pkg.payment_link ? (
                       <a
-                        href={pkg.payment_link}
+                        href={buildPaymentUrl(pkg.payment_link, pkg.id, refCode)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="btn-primary mt-3 block w-full text-center"
