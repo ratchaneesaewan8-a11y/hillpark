@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     // 1) ตรวจสอบ package + ดึงราคาจริงจาก DB
     const { data: pkg, error: pkgErr } = await supabase
       .from("packages")
-      .select("id, tour_id, name_th, adult_price, child_price, infant_price, capacity, affiliate_min_price, affiliate_max_price, company_entry_price")
+      .select("id, tour_id, name_th, adult_price, child_price, infant_price, capacity, affiliate_min_price, affiliate_max_price, regular_price, company_entry_price")
       .eq("id", packageId)
       .single();
     if (pkgErr || !pkg) return NextResponse.json({ error: "package not found" }, { status: 404 });
@@ -59,7 +59,8 @@ export async function POST(req: Request) {
     // ตัวแทนตั้งราคาขายได้เฉพาะแพ็กเกจที่กำหนดช่วงราคาไว้ และต้องมาจาก referral ที่ตรวจสอบแล้ว
     if (affiliatePrice !== undefined && affiliatePartnerId) {
       const unitPrice = Number(affiliatePrice);
-      if (!Number.isInteger(unitPrice) || !pkg.affiliate_min_price || !pkg.affiliate_max_price || !pkg.company_entry_price || unitPrice < pkg.affiliate_min_price || unitPrice > pkg.affiliate_max_price) {
+      const maximumPrice = Math.max(pkg.affiliate_max_price ?? 0, pkg.regular_price ?? 0);
+      if (!Number.isInteger(unitPrice) || !pkg.affiliate_min_price || !maximumPrice || !pkg.company_entry_price || unitPrice < pkg.affiliate_min_price || unitPrice > maximumPrice) {
         return NextResponse.json({ error: "ราคา Affiliate อยู่นอกช่วงที่อนุญาต" }, { status: 400 });
       }
       affiliateSalePrice = unitPrice;

@@ -121,11 +121,12 @@ export async function savePartnerPackagePrice(formData: FormData) {
   const db = createAdminClient();
   const [{ data: partner }, { data: pkg }] = await Promise.all([
     db.from("partners").select("id, status").eq("user_id", user.id).maybeSingle(),
-    db.from("packages").select("id, affiliate_min_price, affiliate_max_price").eq("id", packageId).maybeSingle(),
+    db.from("packages").select("id, affiliate_min_price, affiliate_max_price, regular_price").eq("id", packageId).maybeSingle(),
   ]);
   if (!partner || partner.status !== "approved") throw new Error("เฉพาะพาร์ทเนอร์ที่อนุมัติแล้วเท่านั้น");
-  if (!pkg?.affiliate_min_price || !pkg.affiliate_max_price || salePrice < pkg.affiliate_min_price || salePrice > pkg.affiliate_max_price) {
-    throw new Error(`ตั้งราคาได้ระหว่าง ${pkg?.affiliate_min_price ?? 0}–${pkg?.affiliate_max_price ?? 0} บาท`);
+  const maximumPrice = Math.max(pkg?.affiliate_max_price ?? 0, pkg?.regular_price ?? 0);
+  if (!pkg?.affiliate_min_price || !maximumPrice || salePrice < pkg.affiliate_min_price || salePrice > maximumPrice) {
+    throw new Error(`ตั้งราคาได้ระหว่าง ${pkg?.affiliate_min_price ?? 0}–${maximumPrice} บาท`);
   }
   const { error } = await db.from("partner_package_prices").upsert({ partner_id: partner.id, package_id: packageId, sale_price: salePrice, updated_at: new Date().toISOString() });
   if (error) throw new Error(`บันทึกราคาไม่สำเร็จ: ${error.message}`);

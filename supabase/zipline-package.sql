@@ -24,8 +24,8 @@ on conflict (slug) do update set
 insert into public.packages
   (tour_id, name_th, name_en, description_th, adult_price, child_price, infant_price, capacity, regular_price, promo_price, affiliate_min_price, affiliate_max_price, company_entry_price, platform_fee, net_floor, active)
 select t.id, 'Zipline Adventure', 'Zipline Adventure',
-  'ราคาปกติ 1,700 บาท | โปรโมชั่น 1,500 บาท | ตัวแทนตั้งราคาขายได้ 1,200–1,500 บาท',
-  1500, 0, 0, 30, 1700, 1500, 1200, 1500, 1200, 200, 1000, true
+  'ราคาปกติ 1,700 บาท | โปรโมชั่น 1,500 บาท',
+  1500, 0, 0, 30, 1700, 1500, 1200, 1700, 1200, 200, 1000, true
 from public.tours t
 where t.slug = 'hillpark-zipline-adventure'
   and not exists (select 1 from public.packages p where p.tour_id = t.id and p.name_th = 'Zipline Adventure');

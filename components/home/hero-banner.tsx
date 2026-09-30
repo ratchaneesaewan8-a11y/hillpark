@@ -23,18 +23,8 @@ export function HeroBanner() {
         <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/30 to-transparent" />
 
         <div className="relative mx-auto flex h-full max-w-6xl flex-col justify-center px-8">
-          <h1 className="max-w-2xl text-5xl font-extrabold leading-tight text-white drop-shadow">
-            {t("ออกเดินทางสู่การผจญภัย", "Your world of adventure")}
-          </h1>
-          <p className="mt-4 max-w-xl text-lg text-white/90 drop-shadow">
-            {t(
-              "ทัวร์ กิจกรรม และประสบการณ์สุดพิเศษในกระบี่ — จองง่าย ราคาคุ้ม ไปกับ HILLPARK",
-              "Tours, activities and unforgettable experiences in Krabi — easy booking with HILLPARK",
-            )}
-          </p>
-
           {/* ช่องค้นหา วางทับบนภาพ */}
-          <form action="/tours" className="mt-8 flex max-w-2xl items-center gap-2 rounded-2xl bg-white p-2 shadow-card">
+          <form action="/tours" className="flex max-w-2xl items-center gap-2 rounded-2xl bg-white p-2 shadow-card">
             <span className="pl-3 text-brand-text/40">
               <Search size={20} />
             </span>
