@@ -13,10 +13,13 @@ export function PromoStrip({ promotion }: { promotion: { regularPrice: number; p
       <div className="relative flex items-center justify-between overflow-hidden rounded-2xl bg-gradient-to-r from-brand-green to-[#124a3a] px-5 py-4 text-white">
         <div className="relative z-10">
           <b className="block text-[15px] font-bold">{t("Zipline Adventure ราคาพิเศษ", "Zipline Adventure Special")}</b>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-[12px] text-white/65 line-through">฿{promotion.regularPrice.toLocaleString()}</span>
-            <span className="text-xl font-extrabold text-[#FFC531]">฿{promotion.promoPrice.toLocaleString()}</span>
-            <span className="text-[11.5px] text-white/85">{t("/ คน", "/ person")}</span>
+          <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[12px]">
+            <span className="text-white/70">
+              {t("ราคาปกติ ", "Regular ")}<span className="line-through">฿{promotion.regularPrice.toLocaleString()}</span> {t("/ คน", "/ person")}
+            </span>
+            <span className="text-base font-extrabold text-[#FFC531]">
+              {t("โปรโมชั่น ", "Promo ")}฿{promotion.promoPrice.toLocaleString()} <span className="text-[11.5px] text-white/85">{t("/ คน", "/ person")}</span>
+            </span>
           </div>
         </div>
         <Link
