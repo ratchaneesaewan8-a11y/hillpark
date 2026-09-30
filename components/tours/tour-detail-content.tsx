@@ -56,6 +56,7 @@ export function TourDetailContent({
         </div>
         <p className="mt-5 leading-relaxed text-brand-text/80">{description}</p>
 
+        {isAtvActivity && <AtvPackageSelector packages={packages} tourSlug={tour.slug} refCode={refCode} t={t} lang={lang} />}
         {isAtvActivity ? <AtvActivityTemplate t={t} /> : <TourInformationTemplate t={t} tour={tour} />}
 
         {gallery.length > 0 && (
@@ -85,9 +86,9 @@ export function TourDetailContent({
           <div className="text-sm text-brand-text/50">{t("เริ่มต้น", "From")}</div>
           <div className="text-3xl font-bold text-brand-text">{formatTHB(tour.base_price)}</div>
 
-          {isAtvActivity && <div className="mt-4 rounded-xl bg-brand-green px-3 py-2.5 text-sm font-semibold text-white"><Route size={16} className="mr-1.5 inline text-brand-orange" />{t("เลือกเวลาขับ ATV ที่ต้องการ", "Choose your ATV ride duration")}</div>}
+          {isAtvActivity && <div className="mt-4 rounded-xl bg-brand-green px-3 py-3 text-sm font-semibold text-white"><Route size={16} className="mr-1.5 inline text-brand-orange" />{t("เลือกเวลา ราคา และจองได้จากกล่องด้านซ้าย", "Choose your duration, price and book from the panel on the left")}</div>}
 
-          {packages.length > 0 ? (
+          {!isAtvActivity && packages.length > 0 ? (
             <div className="mt-4 space-y-3">
               {packages.map((pkg) => {
                 const name = lang === "en" && pkg.name_en ? pkg.name_en : pkg.name_th;
@@ -124,11 +125,11 @@ export function TourDetailContent({
                 );
               })}
             </div>
-          ) : (
+          ) : !isAtvActivity ? (
             <p className="mt-4 text-sm text-brand-text/50">
               {t("ยังไม่มีแพ็กเกจให้จองในขณะนี้", "No packages available to book yet")}
             </p>
-          )}
+          ) : null}
 
           <p className="mt-3 text-center text-xs text-brand-text/50">
             {t("ชำระเงินปลอดภัยผ่าน Stripe", "Secure payment via Stripe")}
@@ -136,6 +137,44 @@ export function TourDetailContent({
         </div>
       </aside>
     </div>
+  );
+}
+
+function AtvPackageSelector({ packages, tourSlug, refCode, t, lang }: { packages: Package[]; tourSlug: string; refCode: string | null; t: (th: string, en: string) => string; lang: string }) {
+  const [selectedId, setSelectedId] = useState(packages[0]?.id ?? "");
+  const selected = packages.find((pkg) => pkg.id === selectedId) ?? packages[0];
+  if (!selected) return <p className="mt-8 rounded-2xl bg-brand-bg p-5 text-sm text-brand-text/55">{t("ยังไม่มีตัวเลือกกิจกรรมในขณะนี้", "No activity options are available yet")}</p>;
+  const packageName = lang === "en" && selected.name_en ? selected.name_en : selected.name_th;
+  const bookingUrl = `/booking/${tourSlug}?package=${selected.id}`;
+
+  return (
+    <section className="mt-8 overflow-hidden rounded-2xl border border-black/10 bg-white shadow-card">
+      <div className="border-b border-black/5 px-5 py-4 sm:px-6">
+        <h2 className="text-xl font-bold text-brand-text">{t("เลือกแพ็กเกจกิจกรรม", "Choose an activity package")}</h2>
+        <p className="mt-1 text-sm text-brand-text/55">{t("เลือกช่วงเวลาที่ต้องการ แล้วราคาจะแสดงด้านล่าง", "Select a duration to see the price below")}</p>
+      </div>
+      <div className="px-5 py-5 sm:px-6">
+        <div className="text-sm font-medium text-brand-text/70">{t("ระยะเวลาขับ ATV", "ATV ride duration")}</div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {packages.map((pkg) => {
+            const name = lang === "en" && pkg.name_en ? pkg.name_en : pkg.name_th;
+            const active = pkg.id === selected.id;
+            return <button key={pkg.id} type="button" onClick={() => setSelectedId(pkg.id)} className={`rounded-xl border px-4 py-2.5 text-sm font-semibold transition ${active ? "border-brand-orange bg-orange-50 text-brand-orange shadow-sm" : "border-black/15 bg-white text-brand-text hover:border-brand-orange/60"}`}>{name}</button>;
+          })}
+        </div>
+      </div>
+      <div className="flex flex-col gap-4 border-t border-black/5 bg-brand-bg px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div>
+          <div className="text-sm text-brand-text/55">{t("แพ็กเกจที่เลือก", "Selected package")}: <span className="font-semibold text-brand-text">{packageName}</span></div>
+          <div className="mt-1 text-3xl font-bold text-brand-text">{formatTHB(selected.adult_price)} <span className="text-sm font-medium text-brand-text/55">{t("/ คน", "/ person")}</span></div>
+        </div>
+        {selected.payment_link ? (
+          <a href={buildPaymentUrl(selected.payment_link, selected.id, refCode)} target="_blank" rel="noopener noreferrer" className="btn-primary min-w-40 justify-center">{t("จองตอนนี้", "Book now")}</a>
+        ) : (
+          <Link href={bookingUrl} className="btn-primary min-w-40 justify-center">{t("จองตอนนี้", "Book now")}</Link>
+        )}
+      </div>
+    </section>
   );
 }
 
