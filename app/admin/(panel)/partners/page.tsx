@@ -117,7 +117,7 @@ export default async function AdminPartnersPage() {
                   </Link>
                   {p.status === "approved" && (
                     <div className="mt-2 text-sm">
-                      โค้ด: <b className="text-brand-text">{p.ref_code || p.affiliate_code}</b> · ค่าคอม {p.commission_rate}%
+                      โค้ด: <b className="text-brand-text">{p.ref_code || p.affiliate_code}</b> · รับเครดิตจากส่วนต่างราคา
                     </div>
                   )}
                 </div>
@@ -127,14 +127,6 @@ export default async function AdminPartnersPage() {
                     <form action={approvePartner} className="flex items-center gap-2">
                       <input type="hidden" name="id" value={p.id} />
                       <input type="hidden" name="user_id" value={p.user_id} />
-                      <input
-                        name="commission_rate"
-                        type="number"
-                        defaultValue={10}
-                        className="input w-24"
-                        title="ค่าคอม %"
-                      />
-                      <span className="text-sm text-brand-text/50">%</span>
                       <button className="inline-flex items-center gap-1 rounded-xl bg-brand-teal px-3 py-2 text-sm font-semibold text-white">
                         <Check size={16} /> อนุมัติ
                       </button>

@@ -26,7 +26,6 @@ export async function approvePartner(formData: FormData) {
 
   const id = formData.get("id") as string;
   const userId = formData.get("user_id") as string;
-  const rate = Number(formData.get("commission_rate") || 10);
 
   const { data: current } = await admin
     .from("partners")
@@ -41,7 +40,7 @@ export async function approvePartner(formData: FormData) {
       status: "approved",
       ref_code: code,
       affiliate_code: code, // คอลัมน์เดิมในฐานข้อมูล เก็บค่าเดียวกัน
-      commission_rate: rate,
+      commission_rate: 0,
       approved_at: new Date().toISOString(),
     })
     .eq("id", id);
@@ -94,7 +93,7 @@ export async function updatePartner(formData: FormData) {
       bank_account_no: accountNo,
       bank_account_number: accountNo,
       updated_at: new Date().toISOString(),
-      commission_rate: Math.max(0, Math.min(100, Number(val("commission_rate") || 0))),
+      commission_rate: 0,
       status,
     })
     .eq("id", id);
@@ -109,16 +108,16 @@ export async function addCommission(formData: FormData) {
   const partnerId = formData.get("partner_id") as string;
   const bookingRef = ((formData.get("booking_ref") as string) || "").trim() || null;
   const orderAmount = Math.floor(Number(formData.get("order_amount") || 0));
-  const rate = Number(formData.get("rate") || 0);
+  const amount = Math.floor(Number(formData.get("amount") || 0));
   const status = (formData.get("status") as string) || "pending";
-  if (orderAmount <= 0) throw new Error("ยอดจองไม่ถูกต้อง");
+  if (orderAmount <= 0 || amount <= 0) throw new Error("ยอดจองหรือเครดิตไม่ถูกต้อง");
 
   const { error } = await admin.from("partner_commissions").insert({
     partner_id: partnerId,
     booking_ref: bookingRef,
     order_amount: orderAmount,
-    rate_at_booking: rate, // ล็อกอัตรา ณ วันจอง
-    amount: Math.round((orderAmount * rate) / 100),
+    rate_at_booking: 0,
+    amount,
     status,
   });
   if (error) throw new Error(`เพิ่มค่าคอมไม่สำเร็จ: ${error.message}`);

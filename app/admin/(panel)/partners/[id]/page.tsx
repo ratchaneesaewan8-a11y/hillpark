@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Check, X, Plus, Save, Landmark, Wallet, ReceiptText } from "lucide-react";
+import { ArrowLeft, Check, X, Plus, Save, Landmark, Wallet, ReceiptText, CalendarDays, Users } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/auth";
 import { formatTHB } from "@/lib/utils";
@@ -35,6 +35,16 @@ const PAYOUT_STATUS: Record<string, { text: string; cls: string }> = {
   rejected: { text: "ปฏิเสธ", cls: "text-red-500" },
 };
 
+const BOOKING_STATUS: Record<string, { text: string; cls: string }> = {
+  PENDING_PAYMENT: { text: "รอชำระเงิน", cls: "bg-amber-100 text-amber-700" },
+  PAID: { text: "ชำระแล้ว", cls: "bg-sky-100 text-sky-700" },
+  CONFIRMED: { text: "ยืนยันแล้ว", cls: "bg-indigo-100 text-indigo-700" },
+  COMPLETED: { text: "ใช้บริการแล้ว", cls: "bg-emerald-100 text-emerald-700" },
+  CANCELLED: { text: "ยกเลิก", cls: "bg-red-100 text-red-600" },
+  REFUNDED: { text: "คืนเงินแล้ว", cls: "bg-red-100 text-red-600" },
+  PAYMENT_FAILED: { text: "ชำระไม่สำเร็จ", cls: "bg-red-100 text-red-600" },
+};
+
 export default async function AdminPartnerDetailPage({ params }: { params: { id: string } }) {
   await requireAdmin();
   const admin = createAdminClient();
@@ -42,17 +52,29 @@ export default async function AdminPartnerDetailPage({ params }: { params: { id:
   const { data: p } = await admin.from("partners").select("*").eq("id", params.id).single();
   if (!p) return notFound();
 
-  const [{ data: u }, { data: comms }, { data: pos }] = await Promise.all([
+  const [{ data: u }, { data: comms }, { data: pos }, { data: bookingRows }] = await Promise.all([
     admin.from("users").select("name, email").eq("id", p.user_id).single(),
     admin.from("partner_commissions").select("*").eq("partner_id", p.id).order("created_at", { ascending: false }),
     admin.from("partner_payouts").select("*").eq("partner_id", p.id).order("requested_at", { ascending: false }),
+    admin.from("bookings").select("id, booking_number, booking_date, start_time, adults, children, infants, total, booking_status, payment_status, affiliate_commission, created_at, packages(name_th)").eq("affiliate_partner_id", p.id).order("created_at", { ascending: false }),
   ]);
   const commissions = comms ?? [];
   const payouts = pos ?? [];
+  const bookings = bookingRows ?? [];
+  const bookingIds = bookings.map((b: any) => b.id);
+  const { data: contacts } = bookingIds.length ? await admin.from("booking_contacts").select("booking_id, first_name, last_name, phone").in("booking_id", bookingIds) : { data: [] as any[] };
+  const contactByBooking = new Map((contacts ?? []).map((c: any) => [c.booking_id, c]));
 
   const sum = (arr: any[], f: (x: any) => boolean, k = "amount") =>
     arr.filter(f).reduce((s, x) => s + (x[k] || 0), 0);
-  const sales = sum(commissions, (c) => c.status !== "void", "order_amount");
+  const sales = bookings.filter((b: any) => !["CANCELLED", "REFUNDED", "PAYMENT_FAILED"].includes(b.booking_status)).reduce((s: number, b: any) => s + (b.total || 0), 0);
+  const paidBookings = bookings.filter((b: any) => ["PAID", "CONFIRMED", "COMPLETED"].includes(b.booking_status));
+  const commissionByBooking = new Map(commissions.map((c: any) => [c.booking_ref, c.status === "void" ? 0 : c.amount || 0]));
+  const paidSales = paidBookings.reduce((s: number, b: any) => s + (b.total || 0), 0);
+  const partnerCredit = paidBookings.reduce((s: number, b: any) => s + (b.affiliate_commission ?? commissionByBooking.get(b.booking_number) ?? 0), 0);
+  const companyReceived = paidSales - partnerCredit;
+  const systemFee = paidBookings.reduce((s: number, b: any) => s + ((b.adults || 0) * 200), 0);
+  const operatingNet = Math.max(0, companyReceived - systemFee);
   const pendingComm = sum(commissions, (c) => c.status === "pending");
   const availableComm = sum(commissions, (c) => c.status === "available");
   const paidComm = sum(commissions, (c) => c.status === "paid");
@@ -86,9 +108,7 @@ export default async function AdminPartnerDetailPage({ params }: { params: { id:
         <form action={approvePartner} className="flex flex-wrap items-center gap-2 rounded-2xl bg-brand-orange/5 p-4">
           <input type="hidden" name="id" value={p.id} />
           <input type="hidden" name="user_id" value={p.user_id} />
-          <span className="text-sm font-medium text-brand-text">อนุมัติพาร์ทเนอร์นี้ ด้วยอัตราคอม</span>
-          <input name="commission_rate" type="number" defaultValue={p.commission_rate ?? 10} className="input w-24" />
-          <span className="text-sm text-brand-text/60">%</span>
+          <span className="text-sm font-medium text-brand-text">อนุมัติพาร์ทเนอร์นี้ (รับเครดิตจากส่วนต่างราคาขาย)</span>
           <button className="inline-flex items-center gap-1 rounded-xl bg-brand-teal px-4 py-2 text-sm font-semibold text-white">
             <Check size={16} /> อนุมัติ
           </button>
@@ -96,8 +116,13 @@ export default async function AdminPartnerDetailPage({ params }: { params: { id:
       )}
 
       {/* สรุปยอด */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
         <Stat label="ยอดขายจากลิงก์" value={formatTHB(sales)} />
+        <Stat label="ยอดชำระแล้ว" value={formatTHB(paidSales)} />
+        <Stat label="เครดิตพาร์ทเนอร์" value={formatTHB(partnerCredit)} />
+        <Stat label="เงินเข้าบริษัท" value={formatTHB(companyReceived)} />
+        <Stat label="ค่าบริหารระบบ" value={formatTHB(systemFee)} />
+        <Stat label="คงเหลือดำเนินงาน" value={formatTHB(operatingNet)} />
         <Stat label="รอใช้บริการ" value={formatTHB(pendingComm)} />
         <Stat label="พร้อมถอน" value={formatTHB(withdrawable)} />
         <Stat label="รอโอน" value={formatTHB(pendingPayout)} />
@@ -127,9 +152,6 @@ export default async function AdminPartnerDetailPage({ params }: { params: { id:
           <Field label="เบอร์ติดต่อ">
             <input name="phone" defaultValue={p.phone ?? ""} className="input" />
           </Field>
-          <Field label="อัตราค่าคอม (%)">
-            <input name="commission_rate" type="number" min={0} max={100} defaultValue={p.commission_rate ?? 10} className="input" />
-          </Field>
           <Field label="ธนาคาร">
             <select name="bank_name" defaultValue={p.bank_name ?? ""} className="input">
               <option value="">— ไม่ระบุ —</option>
@@ -158,8 +180,15 @@ export default async function AdminPartnerDetailPage({ params }: { params: { id:
           </div>
         </form>
         <p className="mt-3 text-[11px] text-brand-text/45">
-          หมายเหตุ: การเปลี่ยนอัตราคอม มีผลกับรายการใหม่เท่านั้น รายการเดิมใช้อัตรา ณ วันจอง
+          เครดิตของพาร์ทเนอร์คำนวณจากส่วนต่างราคาที่ตั้งเองกับราคา Net ของแพ็กเกจ
         </p>
+      </section>
+
+      {/* รายการจองจากลิงก์ของพาร์ทเนอร์ */}
+      <section className="rounded-2xl bg-white p-6 shadow-soft">
+        <h2 className="mb-1 flex items-center gap-2 text-lg font-bold text-brand-text"><CalendarDays size={20} className="text-brand-orange" /> รายการจองจากลิงก์พาร์ทเนอร์</h2>
+        <p className="mb-4 text-sm text-brand-text/55">ข้อมูลเดียวกับที่พาร์ทเนอร์เห็น ใช้ตรวจสอบยอดชำระและการให้เครดิต</p>
+        {bookings.length ? <div className="overflow-x-auto"><table className="w-full min-w-[980px] text-sm"><thead className="bg-brand-bg text-left text-xs text-brand-text/55"><tr><th className="px-3 py-3">เลขจอง / ลูกค้า</th><th className="px-3 py-3">แพ็กเกจ</th><th className="px-3 py-3">วันใช้บริการ</th><th className="px-3 py-3">จำนวน</th><th className="px-3 py-3">ยอดชำระ</th><th className="px-3 py-3">เครดิตคู่ค้า</th><th className="px-3 py-3">เงินเข้าบริษัท</th><th className="px-3 py-3">สถานะ</th></tr></thead><tbody>{bookings.map((b: any) => { const c = contactByBooking.get(b.id); const s = BOOKING_STATUS[b.booking_status] ?? BOOKING_STATUS.PENDING_PAYMENT; const guests = (b.adults || 0) + (b.children || 0) + (b.infants || 0); const credit = b.affiliate_commission ?? commissionByBooking.get(b.booking_number) ?? 0; const companyAmount = (b.total || 0) - credit; return <tr key={b.id} className="border-b border-black/5"><td className="px-3 py-3"><div className="font-semibold">{b.booking_number}</div><div className="text-xs text-brand-text/55">{c ? `${c.first_name || ""} ${c.last_name || ""}`.trim() || "ลูกค้า" : "ลูกค้า"}{c?.phone ? ` · ${c.phone}` : ""}</div></td><td className="px-3 py-3">{b.packages?.name_th || "-"}</td><td className="px-3 py-3">{new Date(`${b.booking_date}T00:00:00`).toLocaleDateString("th-TH")}<div className="text-xs text-brand-text/45">{b.start_time || "-"}</div></td><td className="px-3 py-3"><span className="inline-flex items-center gap-1"><Users size={14} />{guests}</span></td><td className="px-3 py-3 font-semibold">{formatTHB(b.total)}</td><td className="px-3 py-3 text-brand-orange">{formatTHB(credit)}</td><td className="px-3 py-3 font-semibold text-brand-teal">{formatTHB(companyAmount)}</td><td className="px-3 py-3"><span className={`rounded-full px-2 py-1 text-xs ${s.cls}`}>{s.text}</span></td></tr>; })}</tbody></table></div> : <p className="text-sm text-brand-text/50">ยังไม่มีการจองจากลิงก์นี้</p>}
       </section>
 
       {/* คำขอถอนเงิน */}
@@ -235,7 +264,7 @@ export default async function AdminPartnerDetailPage({ params }: { params: { id:
                     {c.booking_ref || "การจอง"} · ยอดจอง {formatTHB(c.order_amount)}
                   </div>
                   <div className="text-xs text-brand-text/50">
-                    {new Date(c.created_at).toLocaleDateString("th-TH")} · คอม {c.rate_at_booking}% = <b className="text-brand-text">{formatTHB(c.amount)}</b>
+                    {new Date(c.created_at).toLocaleDateString("th-TH")} · เครดิตส่วนต่างราคา <b className="text-brand-text">{formatTHB(c.amount)}</b>
                     {c.void_reason && <span className="text-red-500"> · {c.void_reason}</span>}
                   </div>
                 </div>
@@ -274,8 +303,8 @@ export default async function AdminPartnerDetailPage({ params }: { params: { id:
             <Field label="ยอดจอง (บาท)">
               <input name="order_amount" type="number" min={1} required className="input" />
             </Field>
-            <Field label="อัตราคอม (%)">
-              <input name="rate" type="number" min={0} max={100} defaultValue={p.commission_rate ?? 10} className="input" />
+            <Field label="เครดิตที่ให้ (บาท)">
+              <input name="amount" type="number" min={1} required className="input" />
             </Field>
             <Field label="สถานะเริ่มต้น">
               <select name="status" defaultValue="pending" className="input">
@@ -288,7 +317,7 @@ export default async function AdminPartnerDetailPage({ params }: { params: { id:
             </div>
           </form>
           <p className="mt-2 text-[11px] text-brand-text/45">
-            ใช้ระหว่างที่ระบบยังไม่บันทึกการจองจากลิงก์อัตโนมัติ — ค่าคอมคำนวณจาก ยอดจอง × อัตรา%
+            ใช้สำหรับปรับยอดเป็นกรณีพิเศษ โดยระบุเครดิตเป็นจำนวนเงินบาทโดยตรง
           </p>
         </details>
       </section>
