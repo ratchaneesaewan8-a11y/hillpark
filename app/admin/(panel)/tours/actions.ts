@@ -201,7 +201,7 @@ export async function saveTourPage(formData: FormData) {
       active: formData.get(`pkg_${pid}_active`) === "on",
       partner_enabled: formData.get(`pkg_${pid}_partner_enabled`) === "on",
     };
-    if (formData.get(`pkg_${pid}_atv_split`) === "on") Object.assign(packageUpdate, {
+    if (formData.get(`pkg_${pid}_partner_sale`) === "on") Object.assign(packageUpdate, {
       partner_reward: Number(str(formData, `pkg_${pid}_partner_reward`) || 0),
       platform_fee: Number(str(formData, `pkg_${pid}_platform_fee`) || 0),
       operator_amount: Number(str(formData, `pkg_${pid}_operator_amount`) || 0) || null,

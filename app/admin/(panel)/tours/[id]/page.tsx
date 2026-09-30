@@ -32,7 +32,6 @@ export default async function EditTourPage({
   ]);
 
   if (!tour) return notFound();
-  const isAtvActivity = tour.slug?.toLowerCase().includes("atv");
 
   return (
     <>
@@ -79,7 +78,7 @@ export default async function EditTourPage({
                   <input name={`pkg_${p.id}_capacity`} type="number" defaultValue={p.capacity} className="input" />
                 </label>
                 <PromotionFields id={p.id} enabled={p.promo_active ?? false} regular={p.regular_price} promo={p.promo_price} />
-{isAtvActivity && <PartnerSaleFields id={p.id} enabled={p.partner_enabled ?? Boolean(p.affiliate_min_price)} min={p.affiliate_min_price} max={p.affiliate_max_price} platform={p.platform_fee} operator={p.operator_amount} />}
+<PartnerSaleFields id={p.id} enabled={p.partner_enabled ?? Boolean(p.affiliate_min_price)} min={p.affiliate_min_price} max={p.affiliate_max_price} platform={p.platform_fee} operator={p.operator_amount} />
                 <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70 sm:col-span-3">
                   ลิงก์ชำระเงิน Stripe (Payment Link)
                   <input
