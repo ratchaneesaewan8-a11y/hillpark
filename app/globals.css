@@ -27,6 +27,33 @@ body {
   scrollbar-width: none;
 }
 
+/* สวิตช์มาตรฐานสำหรับ Checkbox ในระบบ Admin */
+.admin-panel input[type="checkbox"] {
+  appearance: none;
+  position: relative;
+  width: 2.75rem;
+  height: 1.5rem;
+  flex: 0 0 auto;
+  cursor: pointer;
+  border-radius: 999px;
+  background: rgba(23, 32, 29, 0.18);
+  transition: background .2s ease;
+}
+.admin-panel input[type="checkbox"]::after {
+  content: "";
+  position: absolute;
+  top: .25rem;
+  left: .25rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  background: white;
+  transition: transform .2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.admin-panel input[type="checkbox"]:checked { background: var(--brand-orange); }
+.admin-panel input[type="checkbox"]:checked::after { transform: translateX(1.25rem); }
+
 @layer components {
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-xl bg-brand-orange px-5 py-3 font-semibold text-white transition hover:brightness-95 active:scale-[0.98];

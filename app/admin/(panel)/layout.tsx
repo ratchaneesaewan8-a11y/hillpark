@@ -27,7 +27,7 @@ export default async function AdminPanelLayout({
   await requireAdmin();
 
   return (
-    <div className="flex min-h-screen bg-brand-bg">
+    <div className="admin-panel flex min-h-screen bg-brand-bg">
       <AdminSidebar />
       <div className="flex-1 overflow-x-hidden">
         <div className="mx-auto max-w-6xl p-6">{children}</div>
