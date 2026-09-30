@@ -98,7 +98,9 @@ export async function POST(req: Request) {
 
     // 5) สร้าง Stripe Checkout Session
     const stripe = getStripe();
-    const site = process.env.NEXT_PUBLIC_SITE_URL!;
+    // ใช้ค่า private ฝั่ง server เพื่อไม่ให้ Vercel บล็อก NEXT_PUBLIC_* ที่ถูกเก็บแบบ Secret
+    // รองรับค่าเดิมไว้สำหรับเครื่องนักพัฒนาและการย้ายระบบแบบไม่สะดุด
+    const site = (process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://hillpark.vercel.app").replace(/\/$/, "");
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: [
