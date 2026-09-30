@@ -12,13 +12,10 @@ export async function updateBookingStatus(formData: FormData) {
   const { data: booking } = await db.from("bookings").select("booking_number").eq("id", id).maybeSingle();
   await db.from("bookings").update({ booking_status }).eq("id", id);
   if (booking?.booking_number) {
-    if (booking_status === "COMPLETED") {
-      await db.from("partner_commissions").update({ status: "available" }).eq("booking_ref", booking.booking_number).eq("status", "pending");
-    } else if (["CANCELLED", "REFUNDED"].includes(booking_status)) {
+    if (["CANCELLED", "REFUNDED"].includes(booking_status)) {
       await db.from("partner_commissions").update({ status: "void" }).eq("booking_ref", booking.booking_number).in("status", ["pending", "available"]);
     }
-    if (booking_status === "COMPLETED") await db.from("booking_revenue_splits").update({ status: "available", updated_at: new Date().toISOString() }).eq("booking_id", id);
-    else if (["CANCELLED", "REFUNDED"].includes(booking_status)) await db.from("booking_revenue_splits").update({ status: "void", updated_at: new Date().toISOString() }).eq("booking_id", id);
+    if (["CANCELLED", "REFUNDED"].includes(booking_status)) await db.from("booking_revenue_splits").update({ status: "void", updated_at: new Date().toISOString() }).eq("booking_id", id);
   }
   revalidatePath("/admin/bookings"); revalidatePath("/admin/partners"); revalidatePath("/partner");
 }

@@ -53,7 +53,6 @@ export default async function PartnerPage() {
   let commissions: any[] = [];
   let payouts: any[] = [];
   let salesFromLinks = 0;   // ยอดขายที่มาจากลิงก์
-  let pendingComm = 0;      // ค่าคอมรอใช้บริการ (Pending)
   let availableComm = 0;    // ค่าคอมพร้อมถอน (Available)
   let withdrawnPaid = 0;    // โอนแล้ว
   let withdrawnPending = 0; // คำขอถอนที่รออยู่
@@ -74,7 +73,6 @@ export default async function PartnerPage() {
       contactByBooking = new Map((contacts ?? []).map((c: any) => [c.booking_id, c]));
     }
     salesFromLinks = bookings.filter((b) => !["CANCELLED", "REFUNDED", "PAYMENT_FAILED"].includes(b.booking_status)).reduce((s, b) => s + (b.total || 0), 0);
-    pendingComm = commissions.filter((c) => c.status === "pending").reduce((s, c) => s + (c.amount || 0), 0);
     availableComm = commissions.filter((c) => c.status === "available").reduce((s, c) => s + (c.amount || 0), 0);
     withdrawnPaid = payouts.filter((p) => p.status === "paid").reduce((s, p) => s + (p.amount || 0), 0);
     withdrawnPending = payouts.filter((p) => p.status === "pending").reduce((s, p) => s + (p.amount || 0), 0);
@@ -122,7 +120,7 @@ export default async function PartnerPage() {
           {/* สรุปค่าคอม (แดชบอร์ด) */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Stat label="ยอดจองจากลิงก์" value={formatTHB(salesFromLinks)} />
-            <Stat label="รอใช้บริการ" value={formatTHB(pendingComm)} />
+            <Stat label="คำขอถอนรอโอน" value={formatTHB(withdrawnPending)} />
             <Stat label="โอนแล้ว" value={formatTHB(withdrawnPaid)} />
             <Stat label="พร้อมถอน" value={formatTHB(available)} highlight />
           </div>

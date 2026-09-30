@@ -109,7 +109,7 @@ export async function addCommission(formData: FormData) {
   const bookingRef = ((formData.get("booking_ref") as string) || "").trim() || null;
   const orderAmount = Math.floor(Number(formData.get("order_amount") || 0));
   const amount = Math.floor(Number(formData.get("amount") || 0));
-  const status = (formData.get("status") as string) || "pending";
+  const status = (formData.get("status") as string) || "available";
   if (orderAmount <= 0 || amount <= 0) throw new Error("ยอดจองหรือเครดิตไม่ถูกต้อง");
 
   const { error } = await admin.from("partner_commissions").insert({

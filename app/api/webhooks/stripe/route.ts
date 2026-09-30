@@ -60,7 +60,7 @@ async function createCommission(db: Db, refCode: string | null, bookingNumber: s
     order_amount: total,
     rate_at_booking: Math.round(rate), // ล็อกอัตรา ณ วันจอง
     amount: Math.round((total * rate) / 100),
-    status: "pending", // ชำระแล้ว รอลูกค้าใช้บริการ
+    status: "available", // ชำระสำเร็จ = เครดิตพร้อมถอนทันที
   });
 }
 
@@ -91,7 +91,7 @@ async function createPriceDifferenceCommission(db: Db, bookingId: string) {
     order_amount: booking.total,
     rate_at_booking: 0,
     amount,
-    status: "pending",
+    status: "available",
   });
 }
 
@@ -105,7 +105,7 @@ async function recordRevenueSplit(db: Db, bookingId: string) {
   const partnerAmount = booking.affiliate_partner_id ? (pkg.partner_reward ?? 0) * quantity : 0;
   const webAmount = booking.affiliate_partner_id ? 0 : (pkg.partner_reward ?? 0) * quantity;
   const operatorAmount = Math.max(0, (booking.total ?? 0) - platformAmount - partnerAmount - webAmount);
-  await db.from("booking_revenue_splits").upsert({ booking_id: booking.id, gross_amount: booking.total ?? 0, partner_amount: partnerAmount, web_amount: webAmount, platform_amount: platformAmount, operator_amount: operatorAmount, status: "pending", updated_at: new Date().toISOString() }, { onConflict: "booking_id" });
+  await db.from("booking_revenue_splits").upsert({ booking_id: booking.id, gross_amount: booking.total ?? 0, partner_amount: partnerAmount, web_amount: webAmount, platform_amount: platformAmount, operator_amount: operatorAmount, status: "available", updated_at: new Date().toISOString() }, { onConflict: "booking_id" });
 }
 
 // การจ่ายเงินผ่าน Payment Link: สร้างการจอง (ครั้งเดียวต่อ session)
