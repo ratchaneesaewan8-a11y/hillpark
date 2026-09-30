@@ -5,6 +5,7 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { applyPartner, requestPayout, savePartnerPackagePrice } from "./actions";
 import { ShareBox } from "@/components/partner/share-box";
 import { PackagePriceForm } from "@/components/partner/package-price-form";
+import { ActivityCatalog } from "@/components/partner/activity-catalog";
 import { formatTHB } from "@/lib/utils";
 import { THAI_BANKS, PARTNER_TYPES } from "@/lib/partner/banks";
 
@@ -81,13 +82,13 @@ export default async function PartnerPage() {
     withdrawnPending = payouts.filter((p) => p.status === "pending").reduce((s, p) => s + (p.amount || 0), 0);
   }
   const { data: affiliatePackages } = partner?.status === "approved"
-    ? await supabase.from("packages").select("id, name_th, affiliate_min_price, affiliate_max_price, regular_price, partner_reward, tours(slug, title_th)").eq("active", true)
+    ? await supabase.from("packages").select("*, tours(slug, title_th, categories(name_th, slug))").eq("active", true)
     : { data: [] as any[] };
   const { data: savedPackagePrices } = partner?.status === "approved"
     ? await supabase.from("partner_package_prices").select("package_id, sale_price").eq("partner_id", partner.id)
     : { data: [] as any[] };
   const priceMap = new Map((savedPackagePrices ?? []).map((row: any) => [row.package_id, row.sale_price]));
-  const shareablePackages = (affiliatePackages ?? []).filter((pkg: any) => pkg.affiliate_min_price || pkg.partner_reward > 0) as any[];
+  const shareablePackages = (affiliatePackages ?? []).filter((pkg: any) => pkg.partner_enabled || pkg.affiliate_min_price || pkg.partner_reward > 0) as any[];
   const ziplinePackage = shareablePackages.find((pkg: any) => pkg.tours?.slug === "hillpark-zipline-adventure") as any;
   const ziplinePrice = ziplinePackage ? (priceMap.get(ziplinePackage.id) ?? ziplinePackage.affiliate_min_price) : null;
   const ziplineMaxPrice = ziplinePackage ? Math.max(ziplinePackage.affiliate_max_price ?? 0, ziplinePackage.regular_price ?? 0) : 0;
@@ -116,7 +117,7 @@ export default async function PartnerPage() {
             <div className="mb-3 flex items-center gap-2 font-semibold text-brand-text">
               <Link2 size={18} className="text-brand-orange" /> ลิงก์และ QR Code สำหรับแชร์ให้ลูกค้า
             </div>
-            <div className="space-y-6">{shareablePackages.map((pkg: any) => { const price = priceMap.get(pkg.id) ?? pkg.affiliate_min_price; const next = `/booking/${pkg.tours?.slug}?package=${pkg.id}${price ? `&price=${price}` : ""}`; return <div key={pkg.id} className="border-b border-black/5 pb-6 last:border-0 last:pb-0"><div className="mb-3 font-semibold text-brand-text">{pkg.tours?.title_th || "กิจกรรม"} · {pkg.name_th}</div><ShareBox link={`${site}/ref/${partner.ref_code || partner.affiliate_code}?next=${encodeURIComponent(next)}`} code={`${partner.ref_code || partner.affiliate_code}-${pkg.id.slice(0, 6)}`} /></div>; })}</div>
+            <ActivityCatalog activities={shareablePackages.map((pkg: any) => { const price = priceMap.get(pkg.id) ?? pkg.affiliate_min_price; const next = `/booking/${pkg.tours?.slug}?package=${pkg.id}${price ? `&price=${price}` : ""}`; return { id: pkg.id, tourTitle: pkg.tours?.title_th || "กิจกรรม", category: pkg.tours?.categories?.name_th || "อื่นๆ", packageName: pkg.name_th, link: `${site}/ref/${partner.ref_code || partner.affiliate_code}?next=${encodeURIComponent(next)}`, code: `${partner.ref_code || partner.affiliate_code}-${pkg.id.slice(0, 6)}` }; })} />
             {!shareablePackages.length && <p className="text-sm text-brand-text/55">ยังไม่มีแพ็กเกจที่เปิดรับพาร์ทเนอร์ กรุณาตั้งค่าค่าตอบแทนพาร์ทเนอร์ในหน้า Admin ของกิจกรรมนั้น</p>}
             <p className="mt-3 text-xs text-brand-text/50">
               แชร์ลิงก์นี้ให้ลูกค้า เมื่อมีคนเข้าเว็บผ่านลิงก์แล้วจอง ระบบจะบันทึกว่ามาจากคุณ
