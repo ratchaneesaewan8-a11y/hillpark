@@ -54,7 +54,7 @@ export function TourDetailContent({
             </span>
           )}
         </div>
-        <p className="mt-5 leading-relaxed text-brand-text/80">{description}</p>
+        {description && <div className="mt-5 whitespace-pre-wrap leading-relaxed text-brand-text/80">{description}</div>}
 
         {isAtvActivity && <AtvPackageSelector packages={packages} tourSlug={tour.slug} refCode={refCode} t={t} lang={lang} />}
         {isAtvActivity ? <AtvActivityTemplate t={t} /> : <TourInformationTemplate t={t} tour={tour} />}

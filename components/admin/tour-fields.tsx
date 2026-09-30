@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { ImageUpload } from "./image-upload";
 import { NewPackageRows } from "./new-package-rows";
+import { FormattedTextarea } from "./formatted-textarea";
 import type { Category } from "@/lib/types";
 
 type TourLike = Record<string, any> | null;
@@ -146,11 +147,12 @@ export function TourFields({
 
       <div>
         <label className="label">{isAtvActivity ? "รายละเอียดเส้นทางและกิจกรรม (ไทย)" : "รายละเอียด (ไทย)"}</label>
-        <textarea name="description_th" rows={isAtvActivity ? 6 : 4} defaultValue={tour?.description_th ?? ""} placeholder={isAtvActivity ? "อธิบายเส้นทาง ระดับความยาก อุปกรณ์ที่รวม และข้อกำหนดสำหรับผู้ขับ" : ""} className="input" />
+        <FormattedTextarea name="description_th" rows={isAtvActivity ? 6 : 6} defaultValue={tour?.description_th ?? ""} placeholder={isAtvActivity ? "อธิบายเส้นทาง ระดับความยาก อุปกรณ์ที่รวม และข้อกำหนดสำหรับผู้ขับ" : "วางข้อความจากแหล่งอื่นได้ ระบบจะเก็บย่อหน้าและรายการตามต้นฉบับ"} />
+        <p className="mt-1 text-xs text-brand-text/50">รองรับการวางข้อความที่มีหัวข้อ ย่อหน้า และรายการ โดยจะแสดงตามบรรทัดที่วางไว้</p>
       </div>
       <div>
         <label className="label">{isAtvActivity ? "รายละเอียดกิจกรรม (อังกฤษ)" : "รายละเอียด (อังกฤษ)"}</label>
-        <textarea name="description_en" rows={4} defaultValue={tour?.description_en ?? ""} className="input" />
+        <FormattedTextarea name="description_en" rows={6} defaultValue={tour?.description_en ?? ""} />
       </div>
 
       <ImageUpload name="cover_image" defaultValue={tour?.cover_image ?? ""} label="รูปหน้าปก (Cover)" />
