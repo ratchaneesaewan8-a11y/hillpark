@@ -96,9 +96,7 @@ export default async function EditTourPage({
                 </label>
               </div>
               <div className="mt-3 flex items-center justify-between">
-                <label className="flex items-center gap-2 text-sm text-brand-text/70">
-                  <input type="checkbox" name={`pkg_${p.id}_active`} defaultChecked={p.active} /> ใช้งาน
-                </label>
+                <div className="flex flex-wrap items-center gap-4"><label className="flex items-center gap-2 text-sm text-brand-text/70"><input type="checkbox" name={`pkg_${p.id}_active`} defaultChecked={p.active} /> ใช้งาน</label><label className="flex items-center gap-2 text-sm font-medium text-brand-teal"><input type="checkbox" name={`pkg_${p.id}_partner_enabled`} defaultChecked={p.partner_enabled ?? Boolean(p.affiliate_min_price || p.partner_reward)} /> เปิดให้พาร์ทเนอร์ขาย</label></div>
                 <button
                   type="submit"
                   formAction={deletePackageFromPage}
