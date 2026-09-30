@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/auth";
 
 // ---------- Tours ----------
@@ -262,10 +262,11 @@ export async function deletePackageFromPage(formData: FormData) {
 
 export async function deleteImageFromPage(formData: FormData) {
   await requireAdmin();
-  const supabase = createClient();
   const id = str(formData, "id");
   const imgId = str(formData, "delete_image");
-  const { error } = await supabase.from("tour_images").delete().eq("id", imgId).eq("tour_id", id);
+  if (!id || !imgId) throw new Error("ไม่พบข้อมูลรูปภาพที่ต้องการลบ");
+  // ใช้ service role หลังตรวจสิทธิ์ Admin แล้ว เพื่อให้ลบได้แม้ RLS ของ tour_images ยังไม่มี policy delete
+  const { error } = await createAdminClient().from("tour_images").delete().eq("id", imgId).eq("tour_id", id);
   if (error) throw new Error(`ลบรูปไม่สำเร็จ: ${error.message}`);
   revalidatePath(`/admin/tours/${id}`);
   revalidatePath("/tours", "layout");
