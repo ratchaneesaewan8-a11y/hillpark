@@ -18,8 +18,8 @@ export async function PopularTours() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-3.5 sm:gap-5 lg:grid-cols-4">
-        {tours.map((tour) => (
+      <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 sm:gap-5">
+        {tours.slice(0, 9).map((tour) => (
           <TourCard
             key={tour.id}
             tour={tour}
