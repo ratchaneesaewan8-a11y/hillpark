@@ -5,9 +5,10 @@ import { createClient } from "@/lib/supabase/server";
 import { TourFields } from "@/components/admin/tour-fields";
 import { ImageUpload } from "@/components/admin/image-upload";
 import { NewPackageRows } from "@/components/admin/new-package-rows";
+import { DeleteGalleryImageButton } from "@/components/admin/delete-gallery-image-button";
 import { SaveToast } from "@/components/admin/save-toast";
 import { SubmitButton } from "@/components/admin/submit-button";
-import { saveTourPage, deletePackageFromPage, deleteImageFromPage } from "../actions";
+import { saveTourPage, deletePackageFromPage } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -125,17 +126,7 @@ export default async function EditTourPage({
             <div key={img.id} className="relative">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={img.image_url} alt="" className="h-24 w-32 rounded-xl object-cover" />
-              <button
-                type="submit"
-                formAction={deleteImageFromPage}
-                formNoValidate
-                name="delete_image"
-                value={img.id}
-                title="ลบรูปนี้"
-                className="absolute -right-2 -top-2 grid h-7 w-7 place-items-center rounded-full bg-red-500 text-white"
-              >
-                <Trash2 size={14} />
-              </button>
+              <DeleteGalleryImageButton tourId={tour.id} imageId={img.id} />
             </div>
           ))}
           {(!images || images.length === 0) && <p className="text-sm text-brand-text/50">ยังไม่มีรูปในแกลเลอรี</p>}
