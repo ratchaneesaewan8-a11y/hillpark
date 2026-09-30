@@ -58,6 +58,16 @@ export async function saveTour(formData: FormData) {
         const { error } = await supabase.from("packages").insert(packages);
         if (error) throw new Error(`เพิ่มตัวเลือกกิจกรรมไม่สำเร็จ: ${error.message}`);
       }
+      const galleryImages = formData
+        .getAll("new_gallery_image")
+        .map((value) => String(value).trim())
+        .filter(Boolean);
+      if (galleryImages.length) {
+        const { error } = await supabase
+          .from("tour_images")
+          .insert(galleryImages.map((image_url) => ({ tour_id: data.id, image_url })));
+        if (error) throw new Error(`เพิ่มรูปแกลเลอรีไม่สำเร็จ: ${error.message}`);
+      }
     }
     revalidatePath("/admin/tours");
     if (data?.id) redirect(`/admin/tours/${data.id}?saved=created`);

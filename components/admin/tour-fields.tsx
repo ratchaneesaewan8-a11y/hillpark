@@ -155,6 +155,14 @@ export function TourFields({
 
       <ImageUpload name="cover_image" defaultValue={tour?.cover_image ?? ""} label="รูปหน้าปก (Cover)" />
 
+      {!tour?.id && (
+        <ImageUpload
+          name="new_gallery_image"
+          label={isAtvActivity ? "แกลเลอรีกิจกรรม ATV (เลือกได้หลายภาพ)" : "แกลเลอรีรูปภาพ (เลือกได้หลายภาพ)"}
+          multiple
+        />
+      )}
+
       <div className="flex flex-wrap gap-6 text-sm text-brand-text/80">
         <label className="flex items-center gap-2"><input type="checkbox" name="active" defaultChecked={tour ? tour.active : true} /> เปิดใช้งาน</label>
         <label className="flex items-center gap-2"><input type="checkbox" name="popular" defaultChecked={tour?.popular ?? false} /> ทัวร์ยอดนิยม</label>
