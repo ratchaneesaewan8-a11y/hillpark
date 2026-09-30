@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Handshake, Clock, XCircle, Link2, Wallet } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { Handshake, Clock, XCircle, Link2, Wallet, CalendarDays, Users } from "lucide-react";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { applyPartner, requestPayout, savePartnerPackagePrice } from "./actions";
 import { ShareBox } from "@/components/partner/share-box";
 import { PackagePriceForm } from "@/components/partner/package-price-form";
@@ -21,6 +21,16 @@ const COMM_STATUS: Record<string, { text: string; cls: string }> = {
   void: { text: "ยกเลิก", cls: "bg-red-100 text-red-500" },
 };
 
+const BOOKING_STATUS: Record<string, { text: string; cls: string }> = {
+  PENDING_PAYMENT: { text: "รอชำระเงิน", cls: "bg-amber-100 text-amber-700" },
+  PAID: { text: "ชำระแล้ว", cls: "bg-sky-100 text-sky-700" },
+  CONFIRMED: { text: "ยืนยันแล้ว", cls: "bg-indigo-100 text-indigo-700" },
+  COMPLETED: { text: "ใช้บริการแล้ว", cls: "bg-emerald-100 text-emerald-700" },
+  CANCELLED: { text: "ยกเลิก", cls: "bg-red-100 text-red-600" },
+  REFUNDED: { text: "คืนเงินแล้ว", cls: "bg-red-100 text-red-600" },
+  PAYMENT_FAILED: { text: "ชำระไม่สำเร็จ", cls: "bg-red-100 text-red-600" },
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function PartnerPage() {
@@ -30,7 +40,9 @@ export default async function PartnerPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: partner } = await supabase
+  // หน้า Partner ใช้ service role หลังยืนยันตัวตนแล้ว เพื่อแสดงเฉพาะรายการของเจ้าของบัญชี
+  const db = createAdminClient();
+  const { data: partner } = await db
     .from("partners")
     .select("*")
     .eq("user_id", user.id)
@@ -46,14 +58,23 @@ export default async function PartnerPage() {
   let availableComm = 0;    // ค่าคอมพร้อมถอน (Available)
   let withdrawnPaid = 0;    // โอนแล้ว
   let withdrawnPending = 0; // คำขอถอนที่รออยู่
+  let bookings: any[] = [];
+  let contactByBooking = new Map<string, any>();
   if (partner?.status === "approved") {
-    const [{ data: comms }, { data: pos }] = await Promise.all([
-      supabase.from("partner_commissions").select("*").eq("partner_id", partner.id).order("created_at", { ascending: false }),
-      supabase.from("partner_payouts").select("*").eq("partner_id", partner.id).order("requested_at", { ascending: false }),
+    const [{ data: comms }, { data: pos }, { data: bookingRows }] = await Promise.all([
+      db.from("partner_commissions").select("*").eq("partner_id", partner.id).order("created_at", { ascending: false }),
+      db.from("partner_payouts").select("*").eq("partner_id", partner.id).order("requested_at", { ascending: false }),
+      db.from("bookings").select("id, booking_number, booking_date, start_time, adults, children, infants, total, booking_status, payment_status, created_at, packages(name_th)").eq("affiliate_partner_id", partner.id).order("created_at", { ascending: false }),
     ]);
     commissions = comms ?? [];
     payouts = pos ?? [];
-    salesFromLinks = commissions.filter((c) => c.status !== "void").reduce((s, c) => s + (c.order_amount || 0), 0);
+    bookings = bookingRows ?? [];
+    const ids = bookings.map((b) => b.id);
+    if (ids.length) {
+      const { data: contacts } = await db.from("booking_contacts").select("booking_id, first_name, last_name, phone").in("booking_id", ids);
+      contactByBooking = new Map((contacts ?? []).map((c: any) => [c.booking_id, c]));
+    }
+    salesFromLinks = bookings.filter((b) => !["CANCELLED", "REFUNDED", "PAYMENT_FAILED"].includes(b.booking_status)).reduce((s, b) => s + (b.total || 0), 0);
     pendingComm = commissions.filter((c) => c.status === "pending").reduce((s, c) => s + (c.amount || 0), 0);
     availableComm = commissions.filter((c) => c.status === "available").reduce((s, c) => s + (c.amount || 0), 0);
     withdrawnPaid = payouts.filter((p) => p.status === "paid").reduce((s, p) => s + (p.amount || 0), 0);
@@ -73,7 +94,7 @@ export default async function PartnerPage() {
   const available = availableComm - withdrawnPending;
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-8">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 lg:px-8">
       <h1 className="flex items-center gap-2 text-2xl font-bold text-brand-text">
         <Handshake className="text-brand-orange" /> โปรแกรมพาร์ทเนอร์ (แนะนำรับค่าคอม)
       </h1>
@@ -86,9 +107,7 @@ export default async function PartnerPage() {
               <Wallet size={20} />
               <span className="font-semibold">คุณเป็นพาร์ทเนอร์แล้ว</span>
             </div>
-            <p className="mt-2 text-sm text-brand-text/60">
-              ค่าคอมมิชชันของคุณ: <b className="text-brand-text">{partner.commission_rate}%</b> ต่อการจองที่มาจากลิงก์ของคุณ
-            </p>
+            <p className="mt-2 text-sm text-brand-text/60">รายได้ของคุณคำนวณจากส่วนต่างระหว่างราคาที่คุณตั้งกับราคา Net ของแพ็กเกจ</p>
           </div>
 
           <div className="rounded-2xl bg-white p-6 shadow-card">
@@ -114,10 +133,19 @@ export default async function PartnerPage() {
 
           {/* สรุปค่าคอม (แดชบอร์ด) */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Stat label="ยอดขายจากลิงก์" value={formatTHB(salesFromLinks)} />
+            <Stat label="ยอดจองจากลิงก์" value={formatTHB(salesFromLinks)} />
             <Stat label="รอใช้บริการ" value={formatTHB(pendingComm)} />
             <Stat label="โอนแล้ว" value={formatTHB(withdrawnPaid)} />
             <Stat label="พร้อมถอน" value={formatTHB(available)} highlight />
+          </div>
+
+          {/* รายการจองของลูกค้าที่มาจากลิงก์นี้ */}
+          <div className="rounded-2xl bg-white p-5 shadow-card sm:p-6">
+            <div className="mb-1 flex items-center gap-2 font-semibold text-brand-text"><CalendarDays size={19} className="text-brand-orange" /> รายการจองจากลูกค้าของคุณ</div>
+            <p className="mb-4 text-sm text-brand-text/55">ติดตามยอดจอง สถานะการชำระเงิน และสถานะการใช้บริการได้ที่นี่</p>
+            {bookings.length ? (
+              <div className="overflow-x-auto"><table className="w-full min-w-[700px] text-sm"><thead className="border-y border-black/5 bg-brand-bg text-left text-xs text-brand-text/55"><tr><th className="px-3 py-3">การจอง / ลูกค้า</th><th className="px-3 py-3">วันใช้บริการ</th><th className="px-3 py-3">จำนวน</th><th className="px-3 py-3">ยอดจอง</th><th className="px-3 py-3">สถานะ</th></tr></thead><tbody>{bookings.map((b) => { const contact = contactByBooking.get(b.id); const st = BOOKING_STATUS[b.booking_status] ?? BOOKING_STATUS.PENDING_PAYMENT; const guests = (b.adults || 0) + (b.children || 0) + (b.infants || 0); return <tr key={b.id} className="border-b border-black/5 last:border-0"><td className="px-3 py-3"><div className="font-semibold text-brand-text">{b.booking_number}</div><div className="mt-0.5 text-xs text-brand-text/55">{contact ? `${contact.first_name || ""} ${contact.last_name || ""}`.trim() || "ลูกค้า" : "ลูกค้า"} · {b.packages?.name_th || "แพ็กเกจ"}</div></td><td className="px-3 py-3 text-brand-text/75">{new Date(`${b.booking_date}T00:00:00`).toLocaleDateString("th-TH")}<div className="text-xs text-brand-text/45">{b.start_time || "-"}</div></td><td className="px-3 py-3"><span className="inline-flex items-center gap-1 text-brand-text/75"><Users size={14} /> {guests} คน</span></td><td className="px-3 py-3 font-semibold text-brand-text">{formatTHB(b.total)}</td><td className="px-3 py-3"><span className={`rounded-full px-2 py-1 text-xs font-medium ${st.cls}`}>{st.text}</span></td></tr>; })}</tbody></table></div>
+            ) : <p className="rounded-xl bg-brand-bg px-4 py-6 text-center text-sm text-brand-text/55">ยังไม่มีลูกค้าจองผ่านลิงก์ของคุณ</p>}
           </div>
 
           {/* ขอถอนเงิน */}
@@ -177,7 +205,7 @@ export default async function PartnerPage() {
                           {c.booking_ref || "การจอง"} · ยอด {formatTHB(c.order_amount)}
                         </div>
                         <div className="text-xs text-brand-text/45">
-                          {new Date(c.created_at).toLocaleDateString("th-TH")} · คอม {c.rate_at_booking || partner.commission_rate}%
+                          {new Date(c.created_at).toLocaleDateString("th-TH")} · ส่วนต่างจากราคาขาย
                         </div>
                       </div>
                       <div className="text-right">

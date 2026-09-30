@@ -51,6 +51,9 @@ async function createCommission(db: Db, refCode: string | null, bookingNumber: s
   if (exists) return;
 
   const rate = Number(partner.commission_rate ?? 0);
+  // เลิกใช้คอมมิชชันแบบเปอร์เซ็นต์แล้ว การจองผ่าน Payment Link ที่ไม่มีส่วนต่างราคา
+  // จึงไม่สร้างเครดิตอัตโนมัติ
+  if (rate <= 0) return;
   await db.from("partner_commissions").insert({
     partner_id: partner.id,
     booking_ref: bookingNumber,
@@ -58,6 +61,34 @@ async function createCommission(db: Db, refCode: string | null, bookingNumber: s
     rate_at_booking: Math.round(rate), // ล็อกอัตรา ณ วันจอง
     amount: Math.round((total * rate) / 100),
     status: "pending", // ชำระแล้ว รอลูกค้าใช้บริการ
+  });
+}
+
+// การจองจากหน้า Hillpark: ค่าตอบแทนใช้ "ส่วนต่างราคาที่พาร์ทเนอร์ตั้ง" เท่านั้น
+// ไม่คำนวณจากเปอร์เซ็นต์ เพื่อให้ตรงกับราคา Net ของแพ็กเกจ
+async function createPriceDifferenceCommission(db: Db, bookingId: string) {
+  const { data: booking } = await db
+    .from("bookings")
+    .select("id, booking_number, total, affiliate_partner_id, affiliate_commission")
+    .eq("id", bookingId)
+    .maybeSingle();
+  if (!booking?.affiliate_partner_id || !booking.affiliate_commission || booking.affiliate_commission <= 0) return;
+
+  const { data: exists } = await db
+    .from("partner_commissions")
+    .select("id")
+    .eq("partner_id", booking.affiliate_partner_id)
+    .eq("booking_ref", booking.booking_number)
+    .maybeSingle();
+  if (exists) return;
+
+  await db.from("partner_commissions").insert({
+    partner_id: booking.affiliate_partner_id,
+    booking_ref: booking.booking_number,
+    order_amount: booking.total,
+    rate_at_booking: 0,
+    amount: booking.affiliate_commission,
+    status: "pending",
   });
 }
 
@@ -181,6 +212,7 @@ export async function POST(req: Request) {
                 stripe_payment_intent_id: session.payment_intent as string,
               })
               .eq("id", bookingId);
+            await createPriceDifferenceCommission(db, bookingId);
           }
         } else if (session.client_reference_id) {
           // แบบ B: Payment Link

@@ -24,7 +24,7 @@ export async function POST(req: Request) {
       const { data: partner } = await supabase
         .from("partners")
         .select("id")
-        .eq("affiliate_code", referralCode)
+        .or(`ref_code.eq.${referralCode},affiliate_code.eq.${referralCode}`)
         .eq("status", "approved")
         .maybeSingle();
       affiliatePartnerId = partner?.id ?? null;
