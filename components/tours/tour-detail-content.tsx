@@ -109,11 +109,6 @@ export function TourDetailContent({
                         {formatTHB(pkg.adult_price)} {t("/ คน", "/ person")}
                       </div>
                     )}
-                    {pkg.affiliate_min_price && pkg.affiliate_max_price && (
-                      <div className="mt-2 text-xs text-brand-teal">
-                        {t("พาร์ทเนอร์ขายได้ ", "Partner price ")}{formatTHB(pkg.affiliate_min_price)}–{formatTHB(pkg.affiliate_max_price)}
-                      </div>
-                    )}
                     {pkg.payment_link ? (
                       <a
                         href={buildPaymentUrl(pkg.payment_link, pkg.id, refCode)}
