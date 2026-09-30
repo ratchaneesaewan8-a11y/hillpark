@@ -8,15 +8,17 @@ export const dynamic = "force-dynamic";
 export default async function AdminDashboard() {
   const supabase = createAdminClient();
 
-  const [{ data: bookings }, { count: tourCount }, { data: recentPartnerBookings }] = await Promise.all([
+  const [{ data: bookings }, { count: tourCount }, { data: recentPartnerBookings }, { data: revenueSplits }] = await Promise.all([
     supabase.from("bookings").select("total, booking_status, created_at"),
     supabase.from("tours").select("*", { count: "exact", head: true }),
     supabase.from("bookings").select("id, booking_number, total, booking_status, payment_status, created_at, partners(id, full_name, business_name, affiliate_code)").not("affiliate_partner_id", "is", null).order("created_at", { ascending: false }).limit(10),
+    supabase.from("booking_revenue_splits").select("gross_amount, partner_amount, web_amount, platform_amount, operator_amount, status"),
   ]);
 
   const paid = (bookings ?? []).filter((b) => b.booking_status === "PAID" || b.booking_status === "CONFIRMED");
   const totalSales = paid.reduce((s, b) => s + (b.total ?? 0), 0);
   const pending = (bookings ?? []).filter((b) => b.booking_status === "PENDING_PAYMENT").length;
+  const revenue = (revenueSplits ?? []).filter((row: any) => row.status !== "void").reduce((sum: any, row: any) => ({ gross: sum.gross + row.gross_amount, partner: sum.partner + row.partner_amount, web: sum.web + (row.web_amount ?? 0), platform: sum.platform + row.platform_amount, operator: sum.operator + row.operator_amount }), { gross: 0, partner: 0, web: 0, platform: 0, operator: 0 });
 
   const stats = [
     { label: "ยอดขายรวม (ชำระแล้ว)", value: formatTHB(totalSales), icon: TrendingUp },
@@ -39,6 +41,10 @@ export default async function AdminDashboard() {
           </div>
         ))}
       </div>
+      <section className="mt-7 rounded-2xl bg-white p-5 shadow-soft sm:p-6">
+        <div className="mb-4 flex items-center justify-between gap-3"><div><h2 className="text-lg font-bold text-brand-text">สรุปแบ่งรายได้ทั้งหมด</h2><p className="text-sm text-brand-text/55">เฉพาะรายการที่ชำระแล้วและยังไม่ถูกยกเลิก</p></div><Link href="/admin/revenue" className="text-sm font-semibold text-brand-orange hover:underline">ดูรายละเอียด</Link></div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">{[["ลูกค้าจ่าย", revenue.gross, "text-brand-text"], ["พาร์ทเนอร์", revenue.partner, "text-brand-orange"], ["จองผ่านเว็บ", revenue.web, "text-violet-600"], ["ค่าระบบ", revenue.platform, "text-brand-teal"], ["ผู้ประกอบการ", revenue.operator, "text-brand-green"]].map(([label, value, cls]) => <div key={String(label)} className="rounded-xl bg-brand-bg p-3"><div className="text-xs text-brand-text/55">{label}</div><div className={`mt-1 text-lg font-bold ${cls}`}>{formatTHB(Number(value))}</div></div>)}</div>
+      </section>
       <section className="mt-7 rounded-2xl bg-white p-5 shadow-soft sm:p-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div><h2 className="flex items-center gap-2 text-lg font-bold text-brand-text"><ReceiptText size={20} className="text-brand-orange" /> รายการล่าสุดจากพาร์ทเนอร์</h2><p className="text-sm text-brand-text/55">10 รายการจองและสถานะการชำระเงินล่าสุด</p></div>

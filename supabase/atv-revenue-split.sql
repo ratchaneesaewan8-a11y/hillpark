@@ -7,12 +7,15 @@ create table if not exists public.booking_revenue_splits (
   booking_id uuid not null unique references public.bookings(id) on delete cascade,
   gross_amount int not null default 0,
   partner_amount int not null default 0,
+  web_amount int not null default 0,
   platform_amount int not null default 0,
   operator_amount int not null default 0,
   status text not null default 'pending',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.booking_revenue_splits add column if not exists web_amount int not null default 0;
 
 update public.packages p set partner_reward = 300, platform_fee = 200, operator_amount = 600
 from public.tours t where p.tour_id = t.id and t.slug = 'atv-nature-view-point-adventure' and p.name_th ilike '%30%';

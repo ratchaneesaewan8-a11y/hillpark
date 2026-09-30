@@ -103,8 +103,9 @@ async function recordRevenueSplit(db: Db, bookingId: string) {
   const quantity = Math.max(1, booking.adults ?? 1);
   const platformAmount = (pkg.platform_fee ?? 0) * quantity;
   const partnerAmount = booking.affiliate_partner_id ? (pkg.partner_reward ?? 0) * quantity : 0;
-  const operatorAmount = Math.max(0, (booking.total ?? 0) - platformAmount - partnerAmount);
-  await db.from("booking_revenue_splits").upsert({ booking_id: booking.id, gross_amount: booking.total ?? 0, partner_amount: partnerAmount, platform_amount: platformAmount, operator_amount: operatorAmount, status: "pending", updated_at: new Date().toISOString() }, { onConflict: "booking_id" });
+  const webAmount = booking.affiliate_partner_id ? 0 : (pkg.partner_reward ?? 0) * quantity;
+  const operatorAmount = Math.max(0, (booking.total ?? 0) - platformAmount - partnerAmount - webAmount);
+  await db.from("booking_revenue_splits").upsert({ booking_id: booking.id, gross_amount: booking.total ?? 0, partner_amount: partnerAmount, web_amount: webAmount, platform_amount: platformAmount, operator_amount: operatorAmount, status: "pending", updated_at: new Date().toISOString() }, { onConflict: "booking_id" });
 }
 
 // การจ่ายเงินผ่าน Payment Link: สร้างการจอง (ครั้งเดียวต่อ session)
