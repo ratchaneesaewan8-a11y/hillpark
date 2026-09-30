@@ -205,6 +205,9 @@ export async function saveTourPage(formData: FormData) {
       partner_reward: Number(str(formData, `pkg_${pid}_partner_reward`) || 0),
       platform_fee: Number(str(formData, `pkg_${pid}_platform_fee`) || 0),
       operator_amount: Number(str(formData, `pkg_${pid}_operator_amount`) || 0) || null,
+      affiliate_min_price: Number(str(formData, `pkg_${pid}_affiliate_min`) || 0) || null,
+      affiliate_max_price: Number(str(formData, `pkg_${pid}_affiliate_max`) || 0) || null,
+      company_entry_price: Number(str(formData, `pkg_${pid}_company_entry`) || 0) || null,
     });
     const { error } = await supabase
       .from("packages")
