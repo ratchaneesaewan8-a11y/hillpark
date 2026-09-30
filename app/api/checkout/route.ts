@@ -13,7 +13,7 @@ import { cookies } from "next/headers";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { tourId, packageId, date, startTime, adults = 0, children = 0, infants = 0, contact, affiliatePrice } = body;
+    const { tourId, packageId, date, startTime, adults = 0, children = 0, infants = 0, contact } = body;
 
     const supabase = createAdminClient();
     // รหัส referral จะมาจาก cookie ที่ /ref/[code] ตั้งไว้เท่านั้น
@@ -56,12 +56,18 @@ export async function POST(req: Request) {
       adults * pkg.adult_price + children * pkg.child_price + infants * pkg.infant_price;
     let affiliateSalePrice: number | null = null;
     let affiliateCommission: number | null = null;
-    // ตัวแทนตั้งราคาขายได้เฉพาะแพ็กเกจที่กำหนดช่วงราคาไว้ และต้องมาจาก referral ที่ตรวจสอบแล้ว
-    if (affiliatePrice !== undefined && affiliatePartnerId) {
-      const unitPrice = Number(affiliatePrice);
+    // อ่านราคาของพาร์ทเนอร์จากฐานข้อมูลเท่านั้น เพื่อให้ QR เดิมใช้ราคาล่าสุดเสมอ
+    if (affiliatePartnerId && pkg.affiliate_min_price) {
+      const { data: savedPrice } = await supabase
+        .from("partner_package_prices")
+        .select("sale_price")
+        .eq("partner_id", affiliatePartnerId)
+        .eq("package_id", pkg.id)
+        .maybeSingle();
+      const unitPrice = Number(savedPrice?.sale_price ?? pkg.affiliate_min_price);
       const maximumPrice = Math.max(pkg.affiliate_max_price ?? 0, pkg.regular_price ?? 0);
       if (!Number.isInteger(unitPrice) || !pkg.affiliate_min_price || !maximumPrice || !pkg.company_entry_price || unitPrice < pkg.affiliate_min_price || unitPrice > maximumPrice) {
-        return NextResponse.json({ error: "ราคา Affiliate อยู่นอกช่วงที่อนุญาต" }, { status: 400 });
+        return NextResponse.json({ error: "ราคาของพาร์ทเนอร์ไม่อยู่ในช่วงที่อนุญาต กรุณาให้พาร์ทเนอร์ตั้งราคาใหม่" }, { status: 400 });
       }
       affiliateSalePrice = unitPrice;
       affiliateCommission = (unitPrice - pkg.company_entry_price - (pkg.platform_fee ?? 0)) * adults;

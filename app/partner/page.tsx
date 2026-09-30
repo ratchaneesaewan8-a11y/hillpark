@@ -3,8 +3,6 @@ import Link from "next/link";
 import { Handshake, Clock, XCircle, Link2, Wallet, CalendarDays, Users } from "lucide-react";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { applyPartner, requestPayout, savePartnerPackagePrice } from "./actions";
-import { ShareBox } from "@/components/partner/share-box";
-import { PackagePriceForm } from "@/components/partner/package-price-form";
 import { ActivityCatalog } from "@/components/partner/activity-catalog";
 import { formatTHB } from "@/lib/utils";
 import { THAI_BANKS, PARTNER_TYPES } from "@/lib/partner/banks";
@@ -89,9 +87,6 @@ export default async function PartnerPage() {
     : { data: [] as any[] };
   const priceMap = new Map((savedPackagePrices ?? []).map((row: any) => [row.package_id, row.sale_price]));
   const shareablePackages = (affiliatePackages ?? []).filter((pkg: any) => pkg.partner_enabled || pkg.affiliate_min_price || pkg.partner_reward > 0) as any[];
-  const ziplinePackage = shareablePackages.find((pkg: any) => pkg.tours?.slug === "hillpark-zipline-adventure") as any;
-  const ziplinePrice = ziplinePackage ? (priceMap.get(ziplinePackage.id) ?? ziplinePackage.affiliate_min_price) : null;
-  const ziplineMaxPrice = ziplinePackage ? Math.max(ziplinePackage.affiliate_max_price ?? 0, ziplinePackage.regular_price ?? 0) : 0;
   // เครดิตที่ถอนได้จริง = คอมพร้อมถอน - ที่ค้างอยู่ในคำขอถอน
   // (เมื่อแอดมินโอนแล้ว ค่าคอมส่วนนั้นจะถูกล็อกเป็น "จ่ายแล้ว" อัตโนมัติ จึงไม่ต้องหักซ้ำ)
   const available = availableComm - withdrawnPending;
@@ -117,20 +112,12 @@ export default async function PartnerPage() {
             <div className="mb-3 flex items-center gap-2 font-semibold text-brand-text">
               <Link2 size={18} className="text-brand-orange" /> ลิงก์และ QR Code สำหรับแชร์ให้ลูกค้า
             </div>
-            <ActivityCatalog activities={shareablePackages.map((pkg: any) => { const price = priceMap.get(pkg.id) ?? pkg.affiliate_min_price; const next = `/booking/${pkg.tours?.slug}?package=${pkg.id}${price ? `&price=${price}` : ""}`; return { id: pkg.id, tourTitle: pkg.tours?.title_th || "กิจกรรม", category: pkg.tours?.categories?.name_th || "อื่นๆ", packageName: pkg.name_th, link: `${site}/ref/${partner.ref_code || partner.affiliate_code}?next=${encodeURIComponent(next)}`, code: `${partner.ref_code || partner.affiliate_code}-${pkg.id.slice(0, 6)}` }; })} />
+            <ActivityCatalog savePrice={savePartnerPackagePrice} activities={shareablePackages.map((pkg: any) => { const next = `/booking/${pkg.tours?.slug}?package=${pkg.id}`; const min = Number(pkg.affiliate_min_price ?? 0); const max = Math.max(Number(pkg.affiliate_max_price ?? 0), Number(pkg.regular_price ?? 0)); return { id: pkg.id, tourTitle: pkg.tours?.title_th || "กิจกรรม", category: pkg.tours?.categories?.name_th || "อื่นๆ", packageName: pkg.name_th, link: `${site}/ref/${partner.ref_code || partner.affiliate_code}?next=${encodeURIComponent(next)}`, code: `${partner.ref_code || partner.affiliate_code}-${pkg.id.slice(0, 6)}`, pricing: min && max ? { min, max, current: Number(priceMap.get(pkg.id) ?? min) } : undefined }; })} />
             {!shareablePackages.length && <p className="text-sm text-brand-text/55">ยังไม่มีแพ็กเกจที่เปิดรับพาร์ทเนอร์ กรุณาตั้งค่าค่าตอบแทนพาร์ทเนอร์ในหน้า Admin ของกิจกรรมนั้น</p>}
             <p className="mt-3 text-xs text-brand-text/50">
               แชร์ลิงก์นี้ให้ลูกค้า เมื่อมีคนเข้าเว็บผ่านลิงก์แล้วจอง ระบบจะบันทึกว่ามาจากคุณ
             </p>
           </div>
-
-          {shareablePackages.filter((pkg: any) => pkg.affiliate_min_price && pkg.affiliate_max_price).map((pkg: any) => (
-            <div className="rounded-2xl bg-white p-6 shadow-card">
-              <div className="mb-1 font-semibold text-brand-text">ตั้งราคาขายแพ็กเกจของฉัน</div>
-              <p className="mb-4 text-sm text-brand-text/60">กำหนดราคาที่ลูกค้าจะเห็นเมื่อใช้ลิงก์ของคุณ</p>
-              <PackagePriceForm packageId={pkg.id} packageName={`${pkg.tours?.title_th || "กิจกรรม"} · ${pkg.name_th}`} minPrice={pkg.affiliate_min_price} maxPrice={Math.max(pkg.affiliate_max_price ?? 0, pkg.regular_price ?? 0)} defaultPrice={priceMap.get(pkg.id) ?? pkg.affiliate_min_price} action={savePartnerPackagePrice} />
-            </div>
-          ))}
 
           {/* สรุปค่าคอม (แดชบอร์ด) */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
