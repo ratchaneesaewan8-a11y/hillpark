@@ -95,9 +95,25 @@ export function TourDetailContent({
                 return (
                   <div key={pkg.id} className="rounded-xl border border-black/10 p-3">
                     <div className="text-sm font-semibold text-brand-text">{name}</div>
-                    <div className="mt-1 text-xs text-brand-text/60">
-                      {formatTHB(pkg.adult_price)} {t("/ คน", "/ person")}
-                    </div>
+                    {pkg.regular_price ? (
+                      <div className="mt-2 rounded-lg bg-orange-50 px-3 py-2">
+                        <div className="text-xs text-brand-text/50 line-through">
+                          {t("ราคาปกติ ", "Regular price ")}{formatTHB(pkg.regular_price)} {t("/ คน", "/ person")}
+                        </div>
+                        <div className="mt-0.5 text-base font-bold text-brand-orange">
+                          {t("โปรโมชั่น ", "Promotion ")}{formatTHB(pkg.promo_price ?? pkg.adult_price)} {t("/ คน", "/ person")}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-1 text-xs text-brand-text/60">
+                        {formatTHB(pkg.adult_price)} {t("/ คน", "/ person")}
+                      </div>
+                    )}
+                    {pkg.affiliate_min_price && pkg.affiliate_max_price && (
+                      <div className="mt-2 text-xs text-brand-teal">
+                        {t("พาร์ทเนอร์ขายได้ ", "Partner price ")}{formatTHB(pkg.affiliate_min_price)}–{formatTHB(pkg.affiliate_max_price)}
+                      </div>
+                    )}
                     {pkg.payment_link ? (
                       <a
                         href={buildPaymentUrl(pkg.payment_link, pkg.id, refCode)}
