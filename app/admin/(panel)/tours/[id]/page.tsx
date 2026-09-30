@@ -165,7 +165,7 @@ export default async function EditTourPage({
           ))}
           {(!images || images.length === 0) && <p className="text-sm text-brand-text/50">ยังไม่มีรูปในแกลเลอรี</p>}
         </div>
-        <ImageUpload name="new_gallery_image" label="เพิ่มรูปใหม่ (อัปโหลดแล้วกดบันทึกทั้งหมด)" />
+        <ImageUpload name="new_gallery_image" label="เพิ่มรูปใหม่ (เลือกได้หลายภาพ แล้วกดบันทึกทั้งหมด)" multiple />
       </section>
 
       <div className="pb-6" />

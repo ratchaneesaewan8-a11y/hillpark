@@ -194,10 +194,13 @@ export async function saveTourPage(formData: FormData) {
     if (error) throw new Error(`เพิ่มแพ็กเกจไม่สำเร็จ: ${error.message}`);
   }
 
-  // 4) รูปแกลเลอรีใหม่ (ถ้าอัปโหลด)
-  const newImage = str(formData, "new_gallery_image");
-  if (newImage) {
-    const { error } = await supabase.from("tour_images").insert({ tour_id: id, image_url: newImage });
+  // 4) รูปแกลเลอรีใหม่ (รองรับเลือกหลายรูปในครั้งเดียว)
+  const newImages = formData
+    .getAll("new_gallery_image")
+    .map((value) => String(value).trim())
+    .filter(Boolean);
+  if (newImages.length) {
+    const { error } = await supabase.from("tour_images").insert(newImages.map((image_url) => ({ tour_id: id, image_url })));
     if (error) throw new Error(`เพิ่มรูปไม่สำเร็จ: ${error.message}`);
   }
 
