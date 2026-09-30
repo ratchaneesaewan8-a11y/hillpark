@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Star, Clock, MapPin } from "lucide-react";
+import { Star, Clock, MapPin, ShieldCheck, Route, UsersRound, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import type { Tour, Package } from "@/lib/types";
 import { formatTHB } from "@/lib/utils";
@@ -22,6 +22,7 @@ export function TourDetailContent({
   const title = lang === "en" && tour.title_en ? tour.title_en : tour.title_th;
   const description = lang === "en" && tour.description_en ? tour.description_en : tour.description_th;
   const reviewLabel = lang === "en" ? "reviews" : "รีวิว";
+  const isAtvActivity = tour.slug.toLowerCase().includes("atv");
 
   // โค้ดพาร์ทเนอร์ (ถ้าลูกค้าเข้ามาผ่านลิงก์แนะนำ) -> แนบไปกับลิงก์จ่ายเงิน Stripe
   const [refCode, setRefCode] = useState<string | null>(null);
@@ -55,6 +56,8 @@ export function TourDetailContent({
         </div>
         <p className="mt-5 leading-relaxed text-brand-text/80">{description}</p>
 
+        {isAtvActivity ? <AtvActivityTemplate t={t} /> : <TourInformationTemplate t={t} tour={tour} />}
+
         {gallery.length > 0 && (
           <div className="mt-8">
             <h2 className="mb-3 text-lg font-semibold text-brand-text">
@@ -74,12 +77,6 @@ export function TourDetailContent({
           </div>
         )}
 
-        <div className="mt-8 rounded-xl border border-dashed border-black/10 bg-white p-5 text-sm text-brand-text/60">
-          {t(
-            "ส่วนนี้ยังเป็นโครงเริ่มต้น — ดูขั้นตอนเติม Itinerary / รายการที่รวม-ไม่รวม / รีวิว ได้ใน README (Roadmap ข้อ 3–4)",
-            "This section is still a starting scaffold — see the README (Roadmap items 3–4) for how to add Itinerary / Included-Excluded / Reviews"
-          )}
-        </div>
       </div>
 
       {/* Booking widget (sticky) */}
@@ -88,12 +85,14 @@ export function TourDetailContent({
           <div className="text-sm text-brand-text/50">{t("เริ่มต้น", "From")}</div>
           <div className="text-3xl font-bold text-brand-text">{formatTHB(tour.base_price)}</div>
 
+          {isAtvActivity && <div className="mt-4 rounded-xl bg-brand-green px-3 py-2.5 text-sm font-semibold text-white"><Route size={16} className="mr-1.5 inline text-brand-orange" />{t("เลือกเวลาขับ ATV ที่ต้องการ", "Choose your ATV ride duration")}</div>}
+
           {packages.length > 0 ? (
             <div className="mt-4 space-y-3">
               {packages.map((pkg) => {
                 const name = lang === "en" && pkg.name_en ? pkg.name_en : pkg.name_th;
                 return (
-                  <div key={pkg.id} className="rounded-xl border border-black/10 p-3">
+                  <div key={pkg.id} className={`rounded-xl border p-3 ${isAtvActivity ? "border-brand-orange/25 bg-orange-50/40" : "border-black/10"}`}>
                     <div className="text-sm font-semibold text-brand-text">{name}</div>
                     {pkg.promo_active && pkg.regular_price && pkg.promo_price ? (
                       <div className="mt-2 rounded-lg bg-orange-50 px-3 py-2">
@@ -138,4 +137,49 @@ export function TourDetailContent({
       </aside>
     </div>
   );
+}
+
+function AtvActivityTemplate({ t }: { t: (th: string, en: string) => string }) {
+  return (
+    <section className="mt-8 space-y-5">
+      <div>
+        <h2 className="text-xl font-bold text-brand-text">{t("ประสบการณ์ขับ ATV", "Your ATV experience")}</h2>
+        <p className="mt-1 text-sm text-brand-text/60">{t("เลือกช่วงเวลาที่เหมาะกับคุณ แล้วออกไปลุยเส้นทางธรรมชาติพร้อมทีมดูแล", "Pick the duration that suits you and ride through nature with our team.")}</p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <InfoCard icon={<Route size={20} />} title={t("เส้นทาง", "Route")} text={t("ทางธรรมชาติ ทางลูกรัง และจุดชมวิว", "Nature trails, dirt tracks and viewpoints")} />
+        <InfoCard icon={<ShieldCheck size={20} />} title={t("ความปลอดภัย", "Safety")} text={t("หมวกกันน็อกและคำแนะนำก่อนเริ่มทุกครั้ง", "Helmet and safety briefing before every ride")} />
+        <InfoCard icon={<UsersRound size={20} />} title={t("เหมาะสำหรับ", "Suitable for")} text={t("มือใหม่ กลุ่มเพื่อน และครอบครัว", "Beginners, friends and families")} />
+      </div>
+      <div className="rounded-2xl border border-brand-teal/15 bg-teal-50/60 p-5">
+        <h3 className="font-semibold text-brand-text">{t("สิ่งที่รวมในกิจกรรม", "What is included")}</h3>
+        <div className="mt-3 grid gap-2 text-sm text-brand-text/75 sm:grid-cols-2">
+          <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-brand-teal" />{t("รถ ATV ตามระยะเวลาที่เลือก", "ATV ride for your selected duration")}</span>
+          <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-brand-teal" />{t("อุปกรณ์เซฟตี้", "Safety equipment")}</span>
+          <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-brand-teal" />{t("เจ้าหน้าที่แนะนำก่อนออกขับ", "Pre-ride staff briefing")}</span>
+          <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-brand-teal" />{t("เส้นทางกิจกรรมที่กำหนด", "Designated activity route")}</span>
+        </div>
+      </div>
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950/80">
+        <strong>{t("ก่อนจอง:", "Before booking:")}</strong> {t("ผู้ขับควรทำตามคำแนะนำของเจ้าหน้าที่และข้อกำหนดหน้างาน หากต้องการบริการรับส่ง โปรดตรวจสอบกับทีมงานก่อนเดินทาง", "Riders must follow staff guidance and on-site requirements. Please confirm transfers with the team before travelling.")}
+      </div>
+    </section>
+  );
+}
+
+function TourInformationTemplate({ t, tour }: { t: (th: string, en: string) => string; tour: Tour }) {
+  return (
+    <section className="mt-8 rounded-2xl bg-brand-bg p-5 text-sm text-brand-text/75">
+      <h2 className="font-semibold text-brand-text">{t("ข้อมูลกิจกรรม", "Activity information")}</h2>
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        {tour.duration && <span><strong>{t("ระยะเวลา:", "Duration:")}</strong> {tour.duration}</span>}
+        {tour.meeting_point && <span><strong>{t("จุดนัดพบ:", "Meeting point:")}</strong> {tour.meeting_point}</span>}
+        {tour.pickup_info && <span className="sm:col-span-2"><strong>{t("การรับส่ง:", "Pickup:")}</strong> {tour.pickup_info}</span>}
+      </div>
+    </section>
+  );
+}
+
+function InfoCard({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
+  return <div className="rounded-2xl border border-black/5 bg-white p-4 shadow-soft"><div className="text-brand-orange">{icon}</div><div className="mt-2 font-semibold text-brand-text">{title}</div><p className="mt-1 text-xs leading-relaxed text-brand-text/60">{text}</p></div>;
 }
