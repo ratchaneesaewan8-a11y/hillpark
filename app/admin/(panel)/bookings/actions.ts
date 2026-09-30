@@ -17,6 +17,8 @@ export async function updateBookingStatus(formData: FormData) {
     } else if (["CANCELLED", "REFUNDED"].includes(booking_status)) {
       await db.from("partner_commissions").update({ status: "void" }).eq("booking_ref", booking.booking_number).in("status", ["pending", "available"]);
     }
+    if (booking_status === "COMPLETED") await db.from("booking_revenue_splits").update({ status: "available", updated_at: new Date().toISOString() }).eq("booking_id", id);
+    else if (["CANCELLED", "REFUNDED"].includes(booking_status)) await db.from("booking_revenue_splits").update({ status: "void", updated_at: new Date().toISOString() }).eq("booking_id", id);
   }
   revalidatePath("/admin/bookings"); revalidatePath("/admin/partners"); revalidatePath("/partner");
 }

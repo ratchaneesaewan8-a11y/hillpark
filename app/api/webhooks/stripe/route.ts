@@ -69,10 +69,13 @@ async function createCommission(db: Db, refCode: string | null, bookingNumber: s
 async function createPriceDifferenceCommission(db: Db, bookingId: string) {
   const { data: booking } = await db
     .from("bookings")
-    .select("id, booking_number, total, affiliate_partner_id, affiliate_commission")
+    .select("id, booking_number, total, adults, package_id, affiliate_partner_id, affiliate_commission")
     .eq("id", bookingId)
     .maybeSingle();
-  if (!booking?.affiliate_partner_id || !booking.affiliate_commission || booking.affiliate_commission <= 0) return;
+  if (!booking?.affiliate_partner_id) return;
+  const { data: pkg } = await db.from("packages").select("partner_reward").eq("id", booking.package_id).maybeSingle();
+  const amount = pkg?.partner_reward ? pkg.partner_reward * Math.max(1, booking.adults ?? 1) : booking.affiliate_commission;
+  if (!amount || amount <= 0) return;
 
   const { data: exists } = await db
     .from("partner_commissions")
@@ -87,9 +90,21 @@ async function createPriceDifferenceCommission(db: Db, bookingId: string) {
     booking_ref: booking.booking_number,
     order_amount: booking.total,
     rate_at_booking: 0,
-    amount: booking.affiliate_commission,
+    amount,
     status: "pending",
   });
+}
+
+async function recordRevenueSplit(db: Db, bookingId: string) {
+  const { data: booking } = await db.from("bookings").select("id, total, adults, package_id, affiliate_partner_id").eq("id", bookingId).maybeSingle();
+  if (!booking?.package_id) return;
+  const { data: pkg } = await db.from("packages").select("partner_reward, platform_fee, operator_amount").eq("id", booking.package_id).maybeSingle();
+  if (!pkg || (!pkg.partner_reward && !pkg.operator_amount)) return; // ใช้เฉพาะแพ็กเกจที่เปิดสูตรแบ่งรายได้ เช่น ATV
+  const quantity = Math.max(1, booking.adults ?? 1);
+  const platformAmount = (pkg.platform_fee ?? 0) * quantity;
+  const partnerAmount = booking.affiliate_partner_id ? (pkg.partner_reward ?? 0) * quantity : 0;
+  const operatorAmount = Math.max(0, (booking.total ?? 0) - platformAmount - partnerAmount);
+  await db.from("booking_revenue_splits").upsert({ booking_id: booking.id, gross_amount: booking.total ?? 0, partner_amount: partnerAmount, platform_amount: platformAmount, operator_amount: operatorAmount, status: "pending", updated_at: new Date().toISOString() }, { onConflict: "booking_id" });
 }
 
 // การจ่ายเงินผ่าน Payment Link: สร้างการจอง (ครั้งเดียวต่อ session)
@@ -118,7 +133,7 @@ async function recordPaymentLinkSale(db: Db, session: Stripe.Checkout.Session) {
         .update({ booking_status: "PAID", payment_status: "paid" })
         .eq("id", existing.id);
     }
-    if (paid) await createCommission(db, refCode, existing.booking_number, total);
+    if (paid) { await createCommission(db, refCode, existing.booking_number, total); await createPriceDifferenceCommission(db, existing.id); await recordRevenueSplit(db, existing.id); }
     return;
   }
 
@@ -127,6 +142,11 @@ async function recordPaymentLinkSale(db: Db, session: Stripe.Checkout.Session) {
   if (packageId) {
     const { data: pkg } = await db.from("packages").select("id, tour_id").eq("id", packageId).maybeSingle();
     tourId = pkg?.tour_id ?? null;
+  }
+  let affiliatePartnerId: string | null = null;
+  if (refCode) {
+    const { data: partner } = await db.from("partners").select("id").or(`ref_code.eq.${refCode},affiliate_code.eq.${refCode}`).eq("status", "approved").maybeSingle();
+    affiliatePartnerId = partner?.id ?? null;
   }
 
   // จำนวนคน (ตามจำนวนที่ลูกค้าเลือกในหน้า Stripe)
@@ -155,6 +175,7 @@ async function recordPaymentLinkSale(db: Db, session: Stripe.Checkout.Session) {
       booking_status: paid ? "PAID" : "PENDING_PAYMENT",
       stripe_session_id: session.id,
       stripe_payment_intent_id: paymentIntent,
+      affiliate_partner_id: affiliatePartnerId,
     })
     .select("id, booking_number")
     .single();
@@ -176,7 +197,7 @@ async function recordPaymentLinkSale(db: Db, session: Stripe.Checkout.Session) {
     });
   }
 
-  if (paid) await createCommission(db, refCode, booking.booking_number, total);
+  if (paid) { await createCommission(db, refCode, booking.booking_number, total); await createPriceDifferenceCommission(db, booking.id); await recordRevenueSplit(db, booking.id); }
 }
 
 export async function POST(req: Request) {
@@ -213,6 +234,7 @@ export async function POST(req: Request) {
               })
               .eq("id", bookingId);
             await createPriceDifferenceCommission(db, bookingId);
+            await recordRevenueSplit(db, bookingId);
           }
         } else if (session.client_reference_id) {
           // แบบ B: Payment Link
@@ -251,6 +273,7 @@ export async function POST(req: Request) {
           .update({ status: "void", void_reason: "คืนเงินแล้ว" })
           .eq("booking_ref", booking.booking_number)
           .in("status", ["pending", "available"]);
+        await db.from("booking_revenue_splits").update({ status: "void", updated_at: new Date().toISOString() }).eq("booking_id", booking.id);
         break;
       }
 

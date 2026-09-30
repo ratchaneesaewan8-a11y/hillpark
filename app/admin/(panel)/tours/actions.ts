@@ -190,18 +190,24 @@ export async function saveTourPage(formData: FormData) {
   // 2) แพ็กเกจที่มีอยู่ (ชื่อฟิลด์ pkg_<id>_...)
   const pkgIds = formData.getAll("pkg_ids") as string[];
   for (const pid of pkgIds) {
+    const packageUpdate: Record<string, unknown> = {
+      name_th: str(formData, `pkg_${pid}_name`),
+      adult_price: Number(str(formData, `pkg_${pid}_price`) || 0),
+      regular_price: Number(str(formData, `pkg_${pid}_regular_price`) || 0) || null,
+      promo_price: Number(str(formData, `pkg_${pid}_promo_price`) || 0) || null,
+      promo_active: formData.get(`pkg_${pid}_promo_active`) === "on",
+      capacity: Number(str(formData, `pkg_${pid}_capacity`) || 0),
+      payment_link: str(formData, `pkg_${pid}_link`) || null,
+      active: formData.get(`pkg_${pid}_active`) === "on",
+    };
+    if (formData.get(`pkg_${pid}_atv_split`) === "on") Object.assign(packageUpdate, {
+      partner_reward: Number(str(formData, `pkg_${pid}_partner_reward`) || 0),
+      platform_fee: Number(str(formData, `pkg_${pid}_platform_fee`) || 0),
+      operator_amount: Number(str(formData, `pkg_${pid}_operator_amount`) || 0) || null,
+    });
     const { error } = await supabase
       .from("packages")
-      .update({
-        name_th: str(formData, `pkg_${pid}_name`),
-        adult_price: Number(str(formData, `pkg_${pid}_price`) || 0),
-        regular_price: Number(str(formData, `pkg_${pid}_regular_price`) || 0) || null,
-        promo_price: Number(str(formData, `pkg_${pid}_promo_price`) || 0) || null,
-        promo_active: formData.get(`pkg_${pid}_promo_active`) === "on",
-        capacity: Number(str(formData, `pkg_${pid}_capacity`) || 0),
-        payment_link: str(formData, `pkg_${pid}_link`) || null,
-        active: formData.get(`pkg_${pid}_active`) === "on",
-      })
+      .update(packageUpdate)
       .eq("id", pid)
       .eq("tour_id", id);
     if (error) throw new Error(`บันทึกแพ็กเกจไม่สำเร็จ: ${error.message}`);
