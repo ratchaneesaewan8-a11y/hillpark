@@ -6,6 +6,7 @@ import { TourFields } from "@/components/admin/tour-fields";
 import { ImageUpload } from "@/components/admin/image-upload";
 import { NewPackageRows } from "@/components/admin/new-package-rows";
 import { DeleteGalleryImageButton } from "@/components/admin/delete-gallery-image-button";
+import { PartnerSaleFields } from "@/components/admin/partner-sale-fields";
 import { SaveToast } from "@/components/admin/save-toast";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { saveTourPage, deletePackageFromPage } from "../actions";
@@ -80,7 +81,7 @@ export default async function EditTourPage({
                   <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><div><div className="font-semibold text-brand-text">ราคาโปรโมชั่น</div><p className="text-xs font-normal text-brand-text/55">เปิดใช้แล้ว หน้าเว็บจะแสดงราคาปกติแบบขีดทับ และราคาโปรโมชัน</p></div><label className="flex items-center gap-2 text-sm font-semibold text-brand-orange"><input type="checkbox" name={`pkg_${p.id}_promo_active`} defaultChecked={p.promo_active ?? false} /> เปิดใช้โปรโมชั่น</label></div>
                   <div className="grid gap-3 sm:grid-cols-2"><label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">ราคาปกติ (บาท/คน)<input name={`pkg_${p.id}_regular_price`} type="number" min={0} defaultValue={p.regular_price ?? ""} placeholder="เช่น 1700" className="input" /></label><label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">ราคาโปรโมชั่น (บาท/คน)<input name={`pkg_${p.id}_promo_price`} type="number" min={0} defaultValue={p.promo_price ?? ""} placeholder="เช่น 1500" className="input" /></label></div>
                 </div>
-{isAtvActivity && <div className="sm:col-span-3 rounded-xl border border-brand-teal/20 bg-teal-50/60 p-4"><input type="hidden" name={`pkg_${p.id}_atv_split`} value="on" /><div className="font-semibold text-brand-text">แบ่งรายได้และช่วงราคาพาร์ทเนอร์ ATV</div><p className="mb-3 text-xs text-brand-text/55">ตั้งช่วงที่พาร์ทเนอร์ขายได้ ระบบจะคำนวณกำไรจากราคาขายจริงโดยอัตโนมัติ</p><div className="grid gap-3 sm:grid-cols-4"><label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">ราคาต่ำสุด<input name={`pkg_${p.id}_affiliate_min`} type="number" min={0} defaultValue={p.affiliate_min_price ?? ""} className="input" /></label><label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">ราคาสูงสุด<input name={`pkg_${p.id}_affiliate_max`} type="number" min={0} defaultValue={p.affiliate_max_price ?? ""} className="input" /></label><label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">ค่าระบบ<input name={`pkg_${p.id}_platform_fee`} type="number" min={0} defaultValue={p.platform_fee ?? 200} className="input" /></label><label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">ผู้ประกอบการ<input name={`pkg_${p.id}_operator_amount`} type="number" min={0} defaultValue={p.operator_amount ?? ""} className="input" /></label></div></div>}
+{isAtvActivity && <PartnerSaleFields id={p.id} enabled={p.partner_enabled ?? Boolean(p.affiliate_min_price)} min={p.affiliate_min_price} max={p.affiliate_max_price} platform={p.platform_fee} operator={p.operator_amount} />}
                 <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70 sm:col-span-3">
                   ลิงก์ชำระเงิน Stripe (Payment Link)
                   <input
@@ -96,7 +97,7 @@ export default async function EditTourPage({
                 </label>
               </div>
               <div className="mt-3 flex items-center justify-between">
-                <div className="flex flex-wrap items-center gap-4"><label className="flex items-center gap-2 text-sm text-brand-text/70"><input type="checkbox" name={`pkg_${p.id}_active`} defaultChecked={p.active} /> ใช้งาน</label><label className="flex items-center gap-2 text-sm font-medium text-brand-teal"><input type="checkbox" name={`pkg_${p.id}_partner_enabled`} defaultChecked={p.partner_enabled ?? Boolean(p.affiliate_min_price || p.partner_reward)} /> เปิดให้พาร์ทเนอร์ขาย</label></div>
+                <div className="flex flex-wrap items-center gap-4"><label className="flex items-center gap-2 text-sm text-brand-text/70"><input type="checkbox" name={`pkg_${p.id}_active`} defaultChecked={p.active} /> ใช้งาน</label></div>
                 <button
                   type="submit"
                   formAction={deletePackageFromPage}
