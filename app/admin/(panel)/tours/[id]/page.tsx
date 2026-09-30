@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { TourFields } from "@/components/admin/tour-fields";
 import { ImageUpload } from "@/components/admin/image-upload";
+import { NewPackageRows } from "@/components/admin/new-package-rows";
 import { SaveToast } from "@/components/admin/save-toast";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { saveTourPage, deletePackageFromPage, deleteImageFromPage } from "../actions";
@@ -113,33 +114,7 @@ export default async function EditTourPage({
           )}
         </div>
 
-        {/* แพ็กเกจใหม่ (กรอกแล้วกดบันทึกทั้งหมด) */}
-        <div className="mt-5 rounded-xl border border-dashed border-brand-orange/40 bg-brand-orange/[0.03] p-4">
-          <div className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-brand-orange">
-            <Plus size={16} /> เพิ่มแพ็กเกจใหม่ (ไม่บังคับ)
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
-              ชื่อแพ็กเกจ
-              <input name="new_pkg_name" placeholder="เช่น แพ็กเกจมาตรฐาน" className="input" />
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
-              ราคา (บาท/คน)
-              <input name="new_pkg_price" type="number" placeholder="0" className="input" />
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">
-              จำนวนที่รับ (คน/รอบ)
-              <input name="new_pkg_capacity" type="number" defaultValue={0} className="input" />
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70 sm:col-span-3">
-              ลิงก์ชำระเงิน Stripe (Payment Link)
-              <input name="new_pkg_link" type="url" placeholder="https://buy.stripe.com/..." className="input" />
-            </label>
-          </div>
-          <p className="mt-2 text-[11px] text-brand-text/45">
-            กรอกชื่อแพ็กเกจแล้วกด "บันทึกทั้งหมด" ด้านบน — ถ้าเว้นว่างไว้ ระบบจะไม่เพิ่มแพ็กเกจ
-          </p>
-        </div>
+        <NewPackageRows />
       </section>
 
       {/* แกลเลอรีรูป */}

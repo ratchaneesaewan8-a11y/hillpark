@@ -15,7 +15,10 @@ export function BookingForm({ tour, packages }: { tour: Tour; packages: Package[
   const [loading, setLoading] = useState(false); const [error, setError] = useState("");
   useEffect(() => {
     setRefCode(readRefCode());
-    const sharedPrice = Number(new URLSearchParams(window.location.search).get("price"));
+    const params = new URLSearchParams(window.location.search);
+    const selectedPackage = params.get("package");
+    if (selectedPackage && packages.some((pkg) => pkg.id === selectedPackage)) setPackageId(selectedPackage);
+    const sharedPrice = Number(params.get("price"));
     if (Number.isInteger(sharedPrice)) setAffiliatePrice(String(sharedPrice));
   }, []);
   const selected = packages.find(p => p.id === packageId) ?? packages[0];

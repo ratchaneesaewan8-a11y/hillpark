@@ -174,23 +174,26 @@ export async function saveTourPage(formData: FormData) {
     if (error) throw new Error(`บันทึกแพ็กเกจไม่สำเร็จ: ${error.message}`);
   }
 
-  // 3) แพ็กเกจใหม่ (เพิ่มเมื่อกรอกชื่อ)
-  const newName = str(formData, "new_pkg_name");
-  if (newName) {
-    const { error } = await supabase.from("packages").insert({
+  // 3) แพ็กเกจใหม่ (เพิ่มได้หลายตัวเลือกในครั้งเดียว)
+  const newNames = formData.getAll("new_pkg_name").map((value) => String(value).trim());
+  const newPrices = formData.getAll("new_pkg_price");
+  const newCapacities = formData.getAll("new_pkg_capacity");
+  const newLinks = formData.getAll("new_pkg_link");
+  const newPackages = newNames
+    .map((name_th, index) => ({
       tour_id: id,
-      name_th: newName,
+      name_th,
       name_en: "",
-      adult_price: Number(str(formData, "new_pkg_price") || 0),
-      regular_price: Number(str(formData, "new_pkg_regular_price") || 0) || null,
-      promo_price: Number(str(formData, "new_pkg_promo_price") || 0) || null,
-      promo_active: formData.get("new_pkg_promo_active") === "on",
+      adult_price: Number(String(newPrices[index] ?? "0")) || 0,
       child_price: 0,
       infant_price: 0,
-      capacity: Number(str(formData, "new_pkg_capacity") || 0),
-      payment_link: str(formData, "new_pkg_link") || null,
+      capacity: Number(String(newCapacities[index] ?? "0")) || 0,
+      payment_link: String(newLinks[index] ?? "").trim() || null,
       active: true,
-    });
+    }))
+    .filter((pkg) => pkg.name_th);
+  if (newPackages.length) {
+    const { error } = await supabase.from("packages").insert(newPackages);
     if (error) throw new Error(`เพิ่มแพ็กเกจไม่สำเร็จ: ${error.message}`);
   }
 
