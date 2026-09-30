@@ -2,8 +2,9 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Handshake, Clock, XCircle, Link2, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { applyPartner, requestPayout } from "./actions";
+import { applyPartner, requestPayout, savePartnerPackagePrice } from "./actions";
 import { ShareBox } from "@/components/partner/share-box";
+import { PackagePriceForm } from "@/components/partner/package-price-form";
 import { formatTHB } from "@/lib/utils";
 import { THAI_BANKS, PARTNER_TYPES } from "@/lib/partner/banks";
 
@@ -58,6 +59,15 @@ export default async function PartnerPage() {
     withdrawnPaid = payouts.filter((p) => p.status === "paid").reduce((s, p) => s + (p.amount || 0), 0);
     withdrawnPending = payouts.filter((p) => p.status === "pending").reduce((s, p) => s + (p.amount || 0), 0);
   }
+  const { data: affiliatePackages } = partner?.status === "approved"
+    ? await supabase.from("packages").select("id, name_th, affiliate_min_price, affiliate_max_price").not("affiliate_min_price", "is", null).eq("active", true)
+    : { data: [] as any[] };
+  const { data: savedPackagePrices } = partner?.status === "approved"
+    ? await supabase.from("partner_package_prices").select("package_id, sale_price").eq("partner_id", partner.id)
+    : { data: [] as any[] };
+  const priceMap = new Map((savedPackagePrices ?? []).map((row: any) => [row.package_id, row.sale_price]));
+  const ziplinePackage = (affiliatePackages ?? [])[0] as any;
+  const ziplinePrice = ziplinePackage ? (priceMap.get(ziplinePackage.id) ?? ziplinePackage.affiliate_min_price) : null;
   // เครดิตที่ถอนได้จริง = คอมพร้อมถอน - ที่ค้างอยู่ในคำขอถอน
   // (เมื่อแอดมินโอนแล้ว ค่าคอมส่วนนั้นจะถูกล็อกเป็น "จ่ายแล้ว" อัตโนมัติ จึงไม่ต้องหักซ้ำ)
   const available = availableComm - withdrawnPending;
@@ -86,13 +96,21 @@ export default async function PartnerPage() {
               <Link2 size={18} className="text-brand-orange" /> ลิงก์แนะนำของคุณ
             </div>
             <ShareBox
-              link={`${site}/?ref=${partner.ref_code || partner.affiliate_code}`}
+              link={ziplinePackage ? `${site}/booking/hillpark-zipline-adventure?ref=${partner.ref_code || partner.affiliate_code}&price=${ziplinePrice}` : `${site}/?ref=${partner.ref_code || partner.affiliate_code}`}
               code={partner.ref_code || partner.affiliate_code || ""}
             />
             <p className="mt-3 text-xs text-brand-text/50">
               แชร์ลิงก์นี้ให้ลูกค้า เมื่อมีคนเข้าเว็บผ่านลิงก์แล้วจอง ระบบจะบันทึกว่ามาจากคุณ
             </p>
           </div>
+
+          {ziplinePackage && (
+            <div className="rounded-2xl bg-white p-6 shadow-card">
+              <div className="mb-1 font-semibold text-brand-text">ตั้งราคาขายแพ็กเกจของฉัน</div>
+              <p className="mb-4 text-sm text-brand-text/60">กำหนดราคา Zipline ที่ลูกค้าจะเห็นเมื่อใช้ลิงก์ของคุณ</p>
+              <PackagePriceForm packageId={ziplinePackage.id} packageName={ziplinePackage.name_th} minPrice={ziplinePackage.affiliate_min_price} maxPrice={ziplinePackage.affiliate_max_price} defaultPrice={ziplinePrice} action={savePartnerPackagePrice} />
+            </div>
+          )}
 
           {/* สรุปค่าคอม (แดชบอร์ด) */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
