@@ -36,6 +36,29 @@ export async function saveTour(formData: FormData) {
     await supabase.from("tours").update(payload).eq("id", id);
   } else {
     const { data } = await supabase.from("tours").insert(payload).select("id").single();
+    if (data?.id) {
+      const names = formData.getAll("new_pkg_name").map((value) => String(value).trim());
+      const prices = formData.getAll("new_pkg_price");
+      const capacities = formData.getAll("new_pkg_capacity");
+      const links = formData.getAll("new_pkg_link");
+      const packages = names
+        .map((name_th, index) => ({
+          tour_id: data.id,
+          name_th,
+          name_en: "",
+          adult_price: Number(String(prices[index] ?? "0")) || 0,
+          child_price: 0,
+          infant_price: 0,
+          capacity: Number(String(capacities[index] ?? "0")) || 0,
+          payment_link: String(links[index] ?? "").trim() || null,
+          active: true,
+        }))
+        .filter((pkg) => pkg.name_th);
+      if (packages.length) {
+        const { error } = await supabase.from("packages").insert(packages);
+        if (error) throw new Error(`เพิ่มตัวเลือกกิจกรรมไม่สำเร็จ: ${error.message}`);
+      }
+    }
     revalidatePath("/admin/tours");
     if (data?.id) redirect(`/admin/tours/${data.id}?saved=created`);
   }

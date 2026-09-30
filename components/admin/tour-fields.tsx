@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { ImageUpload } from "./image-upload";
+import { NewPackageRows } from "./new-package-rows";
 import type { Category } from "@/lib/types";
 
 type TourLike = Record<string, any> | null;
@@ -140,6 +141,8 @@ export function TourFields({
           </ol>
         </div>
       )}
+
+      {isAtvActivity && !tour?.id && <NewPackageRows />}
 
       <div>
         <label className="label">{isAtvActivity ? "รายละเอียดเส้นทางและกิจกรรม (ไทย)" : "รายละเอียด (ไทย)"}</label>
