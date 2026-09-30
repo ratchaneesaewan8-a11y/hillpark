@@ -22,4 +22,20 @@ from public.tours t where p.tour_id = t.id and t.slug = 'atv-nature-view-point-a
 update public.packages p set partner_reward = 300, platform_fee = 200, operator_amount = 1100
 from public.tours t where p.tour_id = t.id and t.slug = 'atv-nature-view-point-adventure' and (p.name_th ilike '%1 ชั่วโมง%' or p.name_th ilike '%60%');
 
+-- เติมรายการย้อนหลังที่ชำระแล้ว (หลังรันครั้งแรก Dashboard จะแสดงรายการทดสอบเดิมด้วย)
+insert into public.booking_revenue_splits (booking_id, gross_amount, partner_amount, web_amount, platform_amount, operator_amount, status)
+select b.id,
+  b.total,
+  case when b.affiliate_partner_id is not null then p.partner_reward * greatest(1, b.adults) else 0 end,
+  case when b.affiliate_partner_id is null then p.partner_reward * greatest(1, b.adults) else 0 end,
+  coalesce(p.platform_fee, 0) * greatest(1, b.adults),
+  greatest(0, b.total - (coalesce(p.platform_fee, 0) * greatest(1, b.adults)) - (coalesce(p.partner_reward, 0) * greatest(1, b.adults))),
+  case when b.booking_status = 'COMPLETED' then 'available' else 'pending' end
+from public.bookings b
+join public.packages p on p.id = b.package_id
+join public.tours t on t.id = b.tour_id
+where t.slug = 'atv-nature-view-point-adventure'
+  and b.booking_status in ('PAID', 'CONFIRMED', 'COMPLETED')
+on conflict (booking_id) do nothing;
+
 notify pgrst, 'reload schema';
