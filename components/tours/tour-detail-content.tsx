@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Star, Clock, MapPin } from "lucide-react";
+import Link from "next/link";
 import type { Tour, Package } from "@/lib/types";
 import { formatTHB } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/language-context";
@@ -107,9 +108,7 @@ export function TourDetailContent({
                         {t("จองเลย", "Book Now")}
                       </a>
                     ) : (
-                      <button disabled className="mt-3 w-full cursor-not-allowed rounded-xl bg-black/5 py-2.5 text-sm text-brand-text/40">
-                        {t("เร็วๆ นี้", "Coming soon")}
-                      </button>
+                      <Link href={`/booking/${tour.slug}?package=${pkg.id}`} className="btn-primary mt-3 block w-full text-center">{t("จองเลย", "Book Now")}</Link>
                     )}
                   </div>
                 );

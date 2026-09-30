@@ -51,6 +51,13 @@ function normalizePackage(row: Record<string, any>): Package {
     capacity: row.capacity ?? 0,
     active: row.active ?? true,
     payment_link: row.payment_link ?? null,
+    regular_price: row.regular_price ?? null,
+    promo_price: row.promo_price ?? null,
+    affiliate_min_price: row.affiliate_min_price ?? null,
+    affiliate_max_price: row.affiliate_max_price ?? null,
+    company_entry_price: row.company_entry_price ?? null,
+    platform_fee: row.platform_fee ?? null,
+    net_floor: row.net_floor ?? null,
   };
 }
 
