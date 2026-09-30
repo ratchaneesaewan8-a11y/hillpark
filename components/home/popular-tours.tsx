@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { ArrowRight, Flame } from "lucide-react";
-import { getPopularTours } from "@/lib/data/live-tours";
+import { getPopularTours, getZiplinePromotion } from "@/lib/data/live-tours";
 import { TourCard } from "./tour-card";
 import { T } from "@/lib/i18n/language-context";
 
 export async function PopularTours() {
-  const tours = await getPopularTours();
+  const [tours, ziplinePromotion] = await Promise.all([getPopularTours(), getZiplinePromotion()]);
 
   return (
     <section className="mx-auto mt-6 w-full max-w-5xl px-4">
@@ -20,7 +20,11 @@ export async function PopularTours() {
 
       <div className="grid grid-cols-2 gap-3.5 sm:gap-5 lg:grid-cols-4">
         {tours.map((tour) => (
-          <TourCard key={tour.id} tour={tour} />
+          <TourCard
+            key={tour.id}
+            tour={tour}
+            promotion={tour.slug === "hillpark-zipline-adventure" ? ziplinePromotion : null}
+          />
         ))}
       </div>
     </section>

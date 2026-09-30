@@ -7,7 +7,12 @@ import type { Tour } from "@/lib/types";
 import { formatTHB, cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/language-context";
 
-export function TourCard({ tour }: { tour: Tour }) {
+type Promotion = {
+  regularPrice: number;
+  promoPrice: number;
+};
+
+export function TourCard({ tour, promotion }: { tour: Tour; promotion?: Promotion | null }) {
   const [liked, setLiked] = useState(false);
   const { lang } = useLanguage();
   const t = (th: string, en: string) => (lang === "en" ? en : th);
@@ -47,9 +52,23 @@ export function TourCard({ tour }: { tour: Tour }) {
             {tour.duration && <span>· {tour.duration}</span>}
           </div>
 
-          <div className="mt-2.5">
-            <div className="text-[10px] text-brand-text/45">{t("เริ่มต้น", "From")}</div>
-            <div className="text-lg font-bold text-brand-green">{formatTHB(tour.base_price)}</div>
+          <div className="mt-2.5 min-h-[3.35rem]">
+            {promotion ? (
+              <>
+                <div className="text-[10px] text-brand-text/45">{t("ราคาปกติ", "Regular price")}</div>
+                <div className="text-[12px] font-medium text-brand-text/45 line-through">
+                  {formatTHB(promotion.regularPrice)} <span className="no-underline">{t("/ คน", "/ person")}</span>
+                </div>
+                <div className="mt-0.5 text-[15px] font-bold text-brand-orange">
+                  {t("โปรโมชั่น", "Promo")} {formatTHB(promotion.promoPrice)} <span className="text-[11px]">{t("/ คน", "/ person")}</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-[10px] text-brand-text/45">{t("เริ่มต้น", "From")}</div>
+                <div className="text-lg font-bold text-brand-green">{formatTHB(tour.base_price)}</div>
+              </>
+            )}
           </div>
 
           {/* ปุ่มนี้เป็นส่วนหนึ่งของลิงก์การ์ด กดแล้วไปหน้ารายละเอียดเหมือนกัน */}
