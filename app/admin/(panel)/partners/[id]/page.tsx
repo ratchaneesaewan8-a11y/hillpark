@@ -116,17 +116,11 @@ export default async function AdminPartnerDetailPage({ params }: { params: { id:
       )}
 
       {/* สรุปยอด */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
-        <Stat label="ยอดขายจากลิงก์" value={formatTHB(sales)} />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="ยอดชำระแล้ว" value={formatTHB(paidSales)} />
         <Stat label="เครดิตพาร์ทเนอร์" value={formatTHB(partnerCredit)} />
         <Stat label="เงินเข้าบริษัท" value={formatTHB(companyReceived)} />
-        <Stat label="ค่าบริหารระบบ" value={formatTHB(systemFee)} />
-        <Stat label="คงเหลือดำเนินงาน" value={formatTHB(operatingNet)} />
-        <Stat label="รอใช้บริการ" value={formatTHB(pendingComm)} />
         <Stat label="พร้อมถอน" value={formatTHB(withdrawable)} />
-        <Stat label="รอโอน" value={formatTHB(pendingPayout)} />
-        <Stat label="จ่ายแล้ว" value={formatTHB(paidComm)} />
       </div>
 
       {/* ข้อมูลพาร์ทเนอร์ + บัญชีธนาคาร (แก้ไขได้) */}

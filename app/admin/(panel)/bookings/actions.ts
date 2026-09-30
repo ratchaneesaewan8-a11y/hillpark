@@ -20,3 +20,28 @@ export async function updateBookingStatus(formData: FormData) {
   }
   revalidatePath("/admin/bookings"); revalidatePath("/admin/partners"); revalidatePath("/partner");
 }
+
+// ลบรายการจองในระบบ Hillpark พร้อมเครดิตพาร์ทเนอร์ที่ผูกกับรายการนั้น
+// ไม่ลบหรือคืนเงินจริงใน Stripe (ต้องดำเนินการผ่าน Stripe แยกต่างหาก)
+export async function deleteBooking(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id") || "");
+  if (!id) return;
+  const db = createAdminClient();
+  const { data: booking } = await db.from("bookings").select("booking_number").eq("id", id).maybeSingle();
+  if (!booking) return;
+
+  const { data: paidCommission } = await db
+    .from("partner_commissions")
+    .select("id")
+    .eq("booking_ref", booking.booking_number)
+    .eq("status", "paid")
+    .maybeSingle();
+  if (paidCommission) throw new Error("ลบไม่ได้ เพราะเครดิตของรายการนี้ถูกโอนจ่ายไปแล้ว");
+
+  await db.from("partner_commissions").delete().eq("booking_ref", booking.booking_number);
+  await db.from("commissions").delete().eq("booking_id", id);
+  const { error } = await db.from("bookings").delete().eq("id", id);
+  if (error) throw new Error(`ลบรายการจองไม่สำเร็จ: ${error.message}`);
+  revalidatePath("/admin"); revalidatePath("/admin/bookings"); revalidatePath("/admin/partners"); revalidatePath("/partner");
+}
