@@ -7,6 +7,7 @@ import { ImageUpload } from "@/components/admin/image-upload";
 import { NewPackageRows } from "@/components/admin/new-package-rows";
 import { DeleteGalleryImageButton } from "@/components/admin/delete-gallery-image-button";
 import { PartnerSaleFields } from "@/components/admin/partner-sale-fields";
+import { PromotionFields } from "@/components/admin/promotion-fields";
 import { SaveToast } from "@/components/admin/save-toast";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { saveTourPage, deletePackageFromPage } from "../actions";
@@ -77,10 +78,7 @@ export default async function EditTourPage({
                   จำนวนที่รับ (คน/รอบ)
                   <input name={`pkg_${p.id}_capacity`} type="number" defaultValue={p.capacity} className="input" />
                 </label>
-                <div className="sm:col-span-3 rounded-xl border border-brand-orange/20 bg-brand-orange/[0.04] p-4">
-                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><div><div className="font-semibold text-brand-text">ราคาโปรโมชั่น</div><p className="text-xs font-normal text-brand-text/55">เปิดใช้แล้ว หน้าเว็บจะแสดงราคาปกติแบบขีดทับ และราคาโปรโมชัน</p></div><label className="flex items-center gap-2 text-sm font-semibold text-brand-orange"><input type="checkbox" name={`pkg_${p.id}_promo_active`} defaultChecked={p.promo_active ?? false} /> เปิดใช้โปรโมชั่น</label></div>
-                  <div className="grid gap-3 sm:grid-cols-2"><label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">ราคาปกติ (บาท/คน)<input name={`pkg_${p.id}_regular_price`} type="number" min={0} defaultValue={p.regular_price ?? ""} placeholder="เช่น 1700" className="input" /></label><label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70">ราคาโปรโมชั่น (บาท/คน)<input name={`pkg_${p.id}_promo_price`} type="number" min={0} defaultValue={p.promo_price ?? ""} placeholder="เช่น 1500" className="input" /></label></div>
-                </div>
+                <PromotionFields id={p.id} enabled={p.promo_active ?? false} regular={p.regular_price} promo={p.promo_price} />
 {isAtvActivity && <PartnerSaleFields id={p.id} enabled={p.partner_enabled ?? Boolean(p.affiliate_min_price)} min={p.affiliate_min_price} max={p.affiliate_max_price} platform={p.platform_fee} operator={p.operator_amount} />}
                 <label className="flex flex-col gap-1 text-xs font-medium text-brand-text/70 sm:col-span-3">
                   ลิงก์ชำระเงิน Stripe (Payment Link)
