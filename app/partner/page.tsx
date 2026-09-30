@@ -124,13 +124,13 @@ export default async function PartnerPage() {
             </p>
           </div>
 
-          {ziplinePackage && (
+          {shareablePackages.filter((pkg: any) => pkg.affiliate_min_price && pkg.affiliate_max_price).map((pkg: any) => (
             <div className="rounded-2xl bg-white p-6 shadow-card">
               <div className="mb-1 font-semibold text-brand-text">ตั้งราคาขายแพ็กเกจของฉัน</div>
-              <p className="mb-4 text-sm text-brand-text/60">กำหนดราคา Zipline ที่ลูกค้าจะเห็นเมื่อใช้ลิงก์ของคุณ</p>
-              <PackagePriceForm packageId={ziplinePackage.id} packageName={ziplinePackage.name_th} minPrice={ziplinePackage.affiliate_min_price} maxPrice={ziplineMaxPrice} defaultPrice={ziplinePrice} action={savePartnerPackagePrice} />
+              <p className="mb-4 text-sm text-brand-text/60">กำหนดราคาที่ลูกค้าจะเห็นเมื่อใช้ลิงก์ของคุณ</p>
+              <PackagePriceForm packageId={pkg.id} packageName={`${pkg.tours?.title_th || "กิจกรรม"} · ${pkg.name_th}`} minPrice={pkg.affiliate_min_price} maxPrice={Math.max(pkg.affiliate_max_price ?? 0, pkg.regular_price ?? 0)} defaultPrice={priceMap.get(pkg.id) ?? pkg.affiliate_min_price} action={savePartnerPackagePrice} />
             </div>
-          )}
+          ))}
 
           {/* สรุปค่าคอม (แดชบอร์ด) */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

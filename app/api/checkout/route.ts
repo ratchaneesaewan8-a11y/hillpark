@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     // 1) ตรวจสอบ package + ดึงราคาจริงจาก DB
     const { data: pkg, error: pkgErr } = await supabase
       .from("packages")
-      .select("id, tour_id, name_th, adult_price, child_price, infant_price, capacity, affiliate_min_price, affiliate_max_price, regular_price, company_entry_price")
+      .select("id, tour_id, name_th, adult_price, child_price, infant_price, capacity, affiliate_min_price, affiliate_max_price, regular_price, company_entry_price, platform_fee")
       .eq("id", packageId)
       .single();
     if (pkgErr || !pkg) return NextResponse.json({ error: "package not found" }, { status: 404 });
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "ราคา Affiliate อยู่นอกช่วงที่อนุญาต" }, { status: 400 });
       }
       affiliateSalePrice = unitPrice;
-      affiliateCommission = (unitPrice - pkg.company_entry_price) * adults;
+      affiliateCommission = (unitPrice - pkg.company_entry_price - (pkg.platform_fee ?? 0)) * adults;
       subtotal = unitPrice * adults + children * pkg.child_price + infants * pkg.infant_price;
     }
     const total = subtotal; // + fees - discount (ถ้ามี)
