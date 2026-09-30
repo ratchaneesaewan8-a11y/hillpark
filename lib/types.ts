@@ -47,6 +47,13 @@ export type Package = {
   capacity: number;
   active: boolean;
   payment_link?: string | null; // ลิงก์ Stripe Payment Link (ใช้แทน API ชั่วคราว)
+  regular_price?: number | null;
+  promo_price?: number | null;
+  affiliate_min_price?: number | null;
+  affiliate_max_price?: number | null;
+  company_entry_price?: number | null;
+  platform_fee?: number | null;
+  net_floor?: number | null;
 };
 
 export type BookingStatus =

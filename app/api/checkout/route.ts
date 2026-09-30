@@ -13,7 +13,7 @@ import { cookies } from "next/headers";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { tourId, packageId, date, startTime, adults = 0, children = 0, infants = 0, contact } = body;
+    const { tourId, packageId, date, startTime, adults = 0, children = 0, infants = 0, contact, affiliatePrice } = body;
 
     const supabase = createAdminClient();
     // รหัส referral จะมาจาก cookie ที่ /ref/[code] ตั้งไว้เท่านั้น
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     // 1) ตรวจสอบ package + ดึงราคาจริงจาก DB
     const { data: pkg, error: pkgErr } = await supabase
       .from("packages")
-      .select("id, tour_id, name_th, adult_price, child_price, infant_price, capacity")
+      .select("id, tour_id, name_th, adult_price, child_price, infant_price, capacity, affiliate_min_price, affiliate_max_price, company_entry_price")
       .eq("id", packageId)
       .single();
     if (pkgErr || !pkg) return NextResponse.json({ error: "package not found" }, { status: 404 });
@@ -52,8 +52,20 @@ export async function POST(req: Request) {
     }
 
     // 3) คำนวณราคาฝั่ง server
-    const subtotal =
+    let subtotal =
       adults * pkg.adult_price + children * pkg.child_price + infants * pkg.infant_price;
+    let affiliateSalePrice: number | null = null;
+    let affiliateCommission: number | null = null;
+    // ตัวแทนตั้งราคาขายได้เฉพาะแพ็กเกจที่กำหนดช่วงราคาไว้ และต้องมาจาก referral ที่ตรวจสอบแล้ว
+    if (affiliatePrice !== undefined && affiliatePartnerId) {
+      const unitPrice = Number(affiliatePrice);
+      if (!Number.isInteger(unitPrice) || !pkg.affiliate_min_price || !pkg.affiliate_max_price || !pkg.company_entry_price || unitPrice < pkg.affiliate_min_price || unitPrice > pkg.affiliate_max_price) {
+        return NextResponse.json({ error: "ราคา Affiliate อยู่นอกช่วงที่อนุญาต" }, { status: 400 });
+      }
+      affiliateSalePrice = unitPrice;
+      affiliateCommission = (unitPrice - pkg.company_entry_price) * adults;
+      subtotal = unitPrice * adults + children * pkg.child_price + infants * pkg.infant_price;
+    }
     const total = subtotal; // + fees - discount (ถ้ามี)
 
     // 4) สร้าง Booking (PENDING_PAYMENT)
@@ -72,6 +84,8 @@ export async function POST(req: Request) {
         currency: "thb",
         booking_status: "PENDING_PAYMENT",
         affiliate_partner_id: affiliatePartnerId,
+        affiliate_sale_price: affiliateSalePrice,
+        affiliate_commission: affiliateCommission,
       })
       .select("id, booking_number")
       .single();

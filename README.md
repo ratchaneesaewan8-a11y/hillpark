@@ -168,6 +168,15 @@ const { data: tours } = await supabase.from("tours").select("*").eq("active", tr
 - เมื่อแอดมินเปลี่ยน Booking เป็น `COMPLETED` เครดิตเป็น `available`; ถ้า `CANCELLED`/`REFUNDED` จะเป็น `void`
 - คำขอถอนเงินอยู่ในตาราง `withdrawals` และแอดมินตรวจ/เปลี่ยนเป็น `paid` ได้ที่ `/admin/withdrawals`
 
+### แพ็กเกจ Zipline / Stripe
+
+รัน `supabase/zipline-package.sql` หลังจาก `schema.sql` และ `affiliate.sql` เพื่อเพิ่มแพ็กเกจ Zipline:
+
+- ราคาปกติ ฿1,700 / โปรโมชั่น ฿1,500 ต่อคน
+- Affiliate ตั้งราคาขายได้ ฿1,200–฿1,500 ต่อคน
+- บริษัทได้รับ ฿1,200, ค่าระบบ ฿200, Net floor ฿1,000 ต่อคน
+- ส่วนต่างจาก ฿1,200 เป็นคอมมิชชันจริงของ Affiliate และจะถูกสร้างหลัง Stripe ยืนยันการชำระเงิน
+
 ---
 
 ## 6) Deploy (Vercel)
