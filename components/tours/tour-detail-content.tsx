@@ -95,7 +95,7 @@ export function TourDetailContent({
                 return (
                   <div key={pkg.id} className="rounded-xl border border-black/10 p-3">
                     <div className="text-sm font-semibold text-brand-text">{name}</div>
-                    {pkg.regular_price ? (
+                    {pkg.promo_active && pkg.regular_price && pkg.promo_price ? (
                       <div className="mt-2 rounded-lg bg-orange-50 px-3 py-2">
                         <div className="text-xs text-brand-text/50 line-through">
                           {t("ราคาปกติ ", "Regular price ")}{formatTHB(pkg.regular_price)} {t("/ คน", "/ person")}

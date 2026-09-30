@@ -4,13 +4,13 @@ import { CategoryScroller } from "@/components/home/category-scroller";
 import { PopularTours } from "@/components/home/popular-tours";
 import { PromoStrip } from "@/components/home/promo-strip";
 import { Benefits } from "@/components/home/benefits";
-import { getFeaturedTours } from "@/lib/data/live-tours";
+import { getFeaturedTours, getZiplinePromotion } from "@/lib/data/live-tours";
 
 // อ่านข้อมูลสดจาก Supabase ทุกครั้ง (ทัวร์แนะนำที่แอดมินเพิ่ม/แก้ ขึ้นทันที)
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const featured = await getFeaturedTours();
+  const [featured, ziplinePromotion] = await Promise.all([getFeaturedTours(), getZiplinePromotion()]);
 
   return (
     <>
@@ -18,7 +18,7 @@ export default async function HomePage() {
       <HeroCarousel tours={featured} />
       <CategoryScroller />
       <PopularTours />
-      <PromoStrip />
+      <PromoStrip promotion={ziplinePromotion} />
       <div className="hidden lg:block">
         <Benefits />
       </div>

@@ -53,12 +53,28 @@ function normalizePackage(row: Record<string, any>): Package {
     payment_link: row.payment_link ?? null,
     regular_price: row.regular_price ?? null,
     promo_price: row.promo_price ?? null,
+    promo_active: row.promo_active ?? false,
     affiliate_min_price: row.affiliate_min_price ?? null,
     affiliate_max_price: row.affiliate_max_price ?? null,
     company_entry_price: row.company_entry_price ?? null,
     platform_fee: row.platform_fee ?? null,
     net_floor: row.net_floor ?? null,
   };
+}
+
+export async function getZiplinePromotion() {
+  if (!hasSupabaseEnv()) return null;
+  try {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("packages")
+      .select("regular_price, promo_price, promo_active, tours!inner(slug)")
+      .eq("active", true)
+      .eq("tours.slug", "hillpark-zipline-adventure")
+      .maybeSingle();
+    if (!data?.promo_active || !data.regular_price || !data.promo_price) return null;
+    return { regularPrice: data.regular_price, promoPrice: data.promo_price };
+  } catch { return null; }
 }
 
 export async function getAllTours(): Promise<Tour[]> {

@@ -3,18 +3,19 @@
 import Link from "next/link";
 import { useLanguage } from "@/lib/i18n/language-context";
 
-export function PromoStrip() {
+export function PromoStrip({ promotion }: { promotion: { regularPrice: number; promoPrice: number } | null }) {
   const { lang } = useLanguage();
   const t = (th: string, en: string) => (lang === "en" ? en : th);
 
+  if (!promotion) return null;
   return (
     <section className="mx-auto mt-6 w-full max-w-5xl px-4">
       <div className="relative flex items-center justify-between overflow-hidden rounded-2xl bg-gradient-to-r from-brand-green to-[#124a3a] px-5 py-4 text-white">
         <div className="relative z-10">
           <b className="block text-[15px] font-bold">{t("Zipline Adventure ราคาพิเศษ", "Zipline Adventure Special")}</b>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-[12px] text-white/65 line-through">฿1,700</span>
-            <span className="text-xl font-extrabold text-[#FFC531]">฿1,500</span>
+            <span className="text-[12px] text-white/65 line-through">฿{promotion.regularPrice.toLocaleString()}</span>
+            <span className="text-xl font-extrabold text-[#FFC531]">฿{promotion.promoPrice.toLocaleString()}</span>
             <span className="text-[11.5px] text-white/85">{t("/ คน", "/ person")}</span>
           </div>
         </div>
