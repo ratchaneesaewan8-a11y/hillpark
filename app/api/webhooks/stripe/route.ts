@@ -96,13 +96,15 @@ async function createPriceDifferenceCommission(db: Db, bookingId: string) {
 }
 
 async function recordRevenueSplit(db: Db, bookingId: string) {
-  const { data: booking } = await db.from("bookings").select("id, total, adults, package_id, affiliate_partner_id").eq("id", bookingId).maybeSingle();
+  const { data: booking } = await db.from("bookings").select("id, total, adults, package_id, affiliate_partner_id, affiliate_commission").eq("id", bookingId).maybeSingle();
   if (!booking?.package_id) return;
   const { data: pkg } = await db.from("packages").select("partner_reward, platform_fee, operator_amount").eq("id", booking.package_id).maybeSingle();
   if (!pkg || (!pkg.partner_reward && !pkg.operator_amount)) return; // ใช้เฉพาะแพ็กเกจที่เปิดสูตรแบ่งรายได้ เช่น ATV
   const quantity = Math.max(1, booking.adults ?? 1);
   const platformAmount = (pkg.platform_fee ?? 0) * quantity;
-  const partnerAmount = booking.affiliate_partner_id ? (pkg.partner_reward ?? 0) * quantity : 0;
+  // ใช้ส่วนต่างที่ล็อกไว้กับการจอง ไม่ใช่ค่าคงที่ของแพ็กเกจ
+  // เพราะพาร์ทเนอร์แต่ละคนสามารถตั้งราคาขายต่างกันได้
+  const partnerAmount = booking.affiliate_partner_id ? (booking.affiliate_commission ?? 0) : 0;
   const webAmount = booking.affiliate_partner_id ? 0 : (pkg.partner_reward ?? 0) * quantity;
   const operatorAmount = Math.max(0, (booking.total ?? 0) - platformAmount - partnerAmount - webAmount);
   await db.from("booking_revenue_splits").upsert({ booking_id: booking.id, gross_amount: booking.total ?? 0, partner_amount: partnerAmount, web_amount: webAmount, platform_amount: platformAmount, operator_amount: operatorAmount, status: "available", updated_at: new Date().toISOString() }, { onConflict: "booking_id" });
