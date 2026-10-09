@@ -24,6 +24,7 @@ export async function saveCategory(formData: FormData) {
     await supabase.from("categories").insert(payload);
   }
   revalidatePath("/admin/categories");
+  revalidatePath("/");
 }
 
 export async function deleteCategory(formData: FormData) {

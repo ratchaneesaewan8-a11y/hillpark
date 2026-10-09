@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseEnv } from "@/lib/admin/auth";
-import { TOURS } from "@/lib/data/tours";
+import { CATEGORIES, TOURS } from "@/lib/data/tours";
 import type { Tour, Package } from "@/lib/types";
 
 // -----------------------------------------------------------------------------
@@ -90,6 +90,18 @@ export async function getAllTours(): Promise<Tour[]> {
     return data.map(normalizeTour);
   } catch {
     return TOURS;
+  }
+}
+
+export async function getActiveCategories(): Promise<Category[]> {
+  if (!hasSupabaseEnv()) return CATEGORIES;
+  try {
+    const supabase = createClient();
+    const { data, error } = await supabase.from("categories").select("*").eq("active", true).order("sort_order");
+    if (error || !data || data.length === 0) return CATEGORIES;
+    return data.map((category: Record<string, any>) => ({ ...category, image: category.image || CATEGORIES.find((item) => item.slug === category.slug)?.image || "" }));
+  } catch {
+    return CATEGORIES;
   }
 }
 

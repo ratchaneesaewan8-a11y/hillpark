@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { saveCategory, deleteCategory } from "./actions";
 import { Plus, Trash2 } from "lucide-react";
+import { ImageUpload } from "@/components/admin/image-upload";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,26 @@ export default async function CategoriesPage() {
         </label>
         <button className="btn-primary sm:col-span-2 lg:col-span-1"><Plus size={18} /> เพิ่มหมวดหมู่</button>
       </form>
+
+      <section className="mb-8 rounded-2xl bg-white p-5 shadow-soft">
+        <h2 className="mb-1 text-lg font-bold text-brand-text">แก้ไขรูปและข้อมูลหมวดหมู่</h2>
+        <p className="mb-5 text-sm text-brand-text/55">รูปที่อัปโหลดในแต่ละการ์ดจะแสดงเป็นรูปวงกลมบนหน้าแรกทันทีหลังบันทึก</p>
+        <div className="grid gap-5 md:grid-cols-2">
+          {(categories ?? []).map((category) => (
+            <form key={category.id} action={saveCategory} className="rounded-2xl border border-black/10 p-4">
+              <input type="hidden" name="id" value={category.id} />
+              <ImageUpload name="image" defaultValue={category.image ?? ""} label={`รูปหมวด ${category.name_th}`} />
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <label className="text-xs font-medium text-brand-text/70">ชื่อไทย<input name="name_th" required defaultValue={category.name_th} className="input mt-1" /></label>
+                <label className="text-xs font-medium text-brand-text/70">ชื่ออังกฤษ<input name="name_en" defaultValue={category.name_en} className="input mt-1" /></label>
+                <label className="text-xs font-medium text-brand-text/70">Slug<input name="slug" required defaultValue={category.slug} className="input mt-1" /></label>
+                <label className="text-xs font-medium text-brand-text/70">ลำดับ<input name="sort_order" type="number" defaultValue={category.sort_order} className="input mt-1" /></label>
+              </div>
+              <div className="mt-4 flex items-center justify-between gap-3"><label className="flex items-center gap-2 text-sm text-brand-text/70"><input type="checkbox" name="active" defaultChecked={category.active} /> แสดงผล</label><div className="flex gap-3"><button className="btn-primary px-4 py-2 text-sm">บันทึก</button><button type="submit" formAction={deleteCategory} formNoValidate className="text-sm font-medium text-red-500 hover:text-red-700">ลบ</button></div></div>
+            </form>
+          ))}
+        </div>
+      </section>
 
       {/* ตารางหมวดหมู่ */}
       <div className="overflow-hidden rounded-2xl bg-white shadow-soft">
