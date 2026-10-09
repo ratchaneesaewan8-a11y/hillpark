@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseEnv } from "@/lib/admin/auth";
 import { CATEGORIES, TOURS } from "@/lib/data/tours";
-import type { Tour, Package } from "@/lib/types";
+import type { Category, Tour, Package } from "@/lib/types";
 
 // -----------------------------------------------------------------------------
 // ดึงข้อมูลทัวร์ฝั่ง Storefront (โฮมเพจ / รายการทัวร์ / รายละเอียดทัวร์)
@@ -99,7 +99,15 @@ export async function getActiveCategories(): Promise<Category[]> {
     const supabase = createClient();
     const { data, error } = await supabase.from("categories").select("*").eq("active", true).order("sort_order");
     if (error || !data || data.length === 0) return CATEGORIES;
-    return data.map((category: Record<string, any>) => ({ ...category, image: category.image || CATEGORIES.find((item) => item.slug === category.slug)?.image || "" }));
+    return data.map((category: Record<string, any>): Category => ({
+      id: category.id,
+      name_th: category.name_th,
+      name_en: category.name_en ?? category.name_th,
+      slug: category.slug,
+      image: category.image || CATEGORIES.find((item) => item.slug === category.slug)?.image || "",
+      active: Boolean(category.active),
+      sort_order: Number(category.sort_order ?? 0),
+    }));
   } catch {
     return CATEGORIES;
   }
