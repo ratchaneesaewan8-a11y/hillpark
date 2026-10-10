@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { saveCategory, deleteCategory } from "./actions";
-import { Plus, Trash2 } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 import { ImageUpload } from "@/components/admin/image-upload";
 
 export const dynamic = "force-dynamic";
@@ -32,58 +32,31 @@ export default async function CategoriesPage() {
       <section className="mb-8 rounded-2xl bg-white p-5 shadow-soft">
         <h2 className="mb-1 text-lg font-bold text-brand-text">แก้ไขรูปและข้อมูลหมวดหมู่</h2>
         <p className="mb-5 text-sm text-brand-text/55">รูปที่อัปโหลดในแต่ละการ์ดจะแสดงเป็นรูปวงกลมบนหน้าแรกทันทีหลังบันทึก</p>
-        <div className="grid gap-5 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {(categories ?? []).map((category) => (
-            <form key={category.id} action={saveCategory} className="rounded-2xl border border-black/10 p-4">
-              <input type="hidden" name="id" value={category.id} />
-              <ImageUpload name="image" defaultValue={category.image ?? ""} label={`รูปหมวด ${category.name_th}`} />
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <label className="text-xs font-medium text-brand-text/70">ชื่อไทย<input name="name_th" required defaultValue={category.name_th} className="input mt-1" /></label>
-                <label className="text-xs font-medium text-brand-text/70">ชื่ออังกฤษ<input name="name_en" defaultValue={category.name_en} className="input mt-1" /></label>
-                <label className="text-xs font-medium text-brand-text/70">Slug<input name="slug" required defaultValue={category.slug} className="input mt-1" /></label>
-                <label className="text-xs font-medium text-brand-text/70">ลำดับ<input name="sort_order" type="number" defaultValue={category.sort_order} className="input mt-1" /></label>
-              </div>
-              <div className="mt-4 flex items-center justify-between gap-3"><label className="flex items-center gap-2 text-sm text-brand-text/70"><input type="checkbox" name="active" defaultChecked={category.active} /> แสดงผล</label><div className="flex gap-3"><button className="btn-primary px-4 py-2 text-sm">บันทึก</button><button type="submit" formAction={deleteCategory} formNoValidate className="text-sm font-medium text-red-500 hover:text-red-700">ลบ</button></div></div>
-            </form>
+            <details key={category.id} className="group overflow-hidden rounded-2xl border border-black/10 bg-white open:border-brand-orange/35 open:shadow-soft">
+              <summary className="flex cursor-pointer list-none items-center gap-3 p-3 marker:hidden">
+                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-brand-bg">
+                  {category.image ? <img src={category.image} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-xs text-brand-text/40">ไม่มีรูป</div>}
+                </div>
+                <div className="min-w-0 flex-1"><div className="truncate font-semibold text-brand-text">{category.name_th}</div><div className="mt-1 text-xs text-brand-text/55">{category.active ? "แสดงบนหน้าแรก" : "ซ่อนอยู่"} · ลำดับ {category.sort_order}</div></div>
+                <ChevronDown size={19} className="shrink-0 text-brand-text/45 transition group-open:rotate-180" />
+              </summary>
+              <form action={saveCategory} className="border-t border-black/5 p-4">
+                <input type="hidden" name="id" value={category.id} />
+                <ImageUpload name="image" defaultValue={category.image ?? ""} label={`รูปหมวด ${category.name_th}`} />
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <label className="text-xs font-medium text-brand-text/70">ชื่อไทย<input name="name_th" required defaultValue={category.name_th} className="input mt-1" /></label>
+                  <label className="text-xs font-medium text-brand-text/70">ชื่ออังกฤษ<input name="name_en" defaultValue={category.name_en} className="input mt-1" /></label>
+                  <label className="text-xs font-medium text-brand-text/70">Slug<input name="slug" required defaultValue={category.slug} className="input mt-1" /></label>
+                  <label className="text-xs font-medium text-brand-text/70">ลำดับ<input name="sort_order" type="number" defaultValue={category.sort_order} className="input mt-1" /></label>
+                </div>
+                <div className="mt-4 flex items-center justify-between gap-3"><label className="flex items-center gap-2 text-sm text-brand-text/70"><input type="checkbox" name="active" defaultChecked={category.active} /> แสดงผล</label><div className="flex gap-3"><button className="btn-primary px-4 py-2 text-sm">บันทึก</button><button type="submit" formAction={deleteCategory} formNoValidate className="text-sm font-medium text-red-500 hover:text-red-700">ลบ</button></div></div>
+              </form>
+            </details>
           ))}
         </div>
       </section>
-
-      {/* ตารางหมวดหมู่ */}
-      <div className="overflow-hidden rounded-2xl bg-white shadow-soft">
-        <table className="w-full text-sm">
-          <thead className="bg-black/[0.03] text-left text-brand-text/60">
-            <tr>
-              <th className="px-4 py-3">ชื่อ</th>
-              <th className="px-4 py-3">slug</th>
-              <th className="px-4 py-3">ลำดับ</th>
-              <th className="px-4 py-3">สถานะ</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {(categories ?? []).map((c) => (
-              <tr key={c.id} className="border-t border-black/5">
-                <td className="px-4 py-3 font-medium">{c.name_th}</td>
-                <td className="px-4 py-3 text-brand-text/60">{c.slug}</td>
-                <td className="px-4 py-3">{c.sort_order}</td>
-                <td className="px-4 py-3">
-                  {c.active ? <span className="text-brand-teal">แสดง</span> : <span className="text-brand-text/40">ซ่อน</span>}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <form action={deleteCategory}>
-                    <input type="hidden" name="id" value={c.id} />
-                    <button className="text-red-500 hover:text-red-700" title="ลบ"><Trash2 size={16} /></button>
-                  </form>
-                </td>
-              </tr>
-            ))}
-            {(!categories || categories.length === 0) && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-brand-text/50">ยังไม่มีหมวดหมู่</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
 }
