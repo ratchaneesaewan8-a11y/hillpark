@@ -78,7 +78,7 @@ export default async function PartnerPage() {
     withdrawnPending = payouts.filter((p) => p.status === "pending").reduce((s, p) => s + (p.amount || 0), 0);
   }
   const { data: affiliatePackages } = partner?.status === "approved"
-    ? await supabase.from("packages").select("*, tours(slug, title_th, categories(name_th, slug))").eq("active", true)
+    ? await supabase.from("packages").select("*, tours(slug, title_th, cover_image, categories(name_th, slug, image))").eq("active", true)
     : { data: [] as any[] };
   const { data: savedPackagePrices } = partner?.status === "approved"
     ? await supabase.from("partner_package_prices").select("package_id, sale_price").eq("partner_id", partner.id)
@@ -110,7 +110,7 @@ export default async function PartnerPage() {
             <div className="mb-3 flex items-center gap-2 font-semibold text-brand-text">
               <Link2 size={18} className="text-brand-orange" /> ลิงก์และ QR Code สำหรับแชร์ให้ลูกค้า
             </div>
-            <ActivityCatalog savePrice={savePartnerPackagePrice} activities={shareablePackages.map((pkg: any) => { const next = `/booking/${pkg.tours?.slug}?package=${pkg.id}`; const min = Number(pkg.affiliate_min_price ?? 0); const max = Math.max(Number(pkg.affiliate_max_price ?? 0), Number(pkg.regular_price ?? 0)); return { id: pkg.id, tourTitle: pkg.tours?.title_th || "กิจกรรม", category: pkg.tours?.categories?.name_th || "อื่นๆ", packageName: pkg.name_th, link: `${site}/ref/${partner.ref_code || partner.affiliate_code}?next=${encodeURIComponent(next)}`, code: `${partner.ref_code || partner.affiliate_code}-${pkg.id.slice(0, 6)}`, pricing: min && max ? { min, max, current: Number(priceMap.get(pkg.id) ?? min) } : undefined }; })} />
+            <ActivityCatalog savePrice={savePartnerPackagePrice} activities={shareablePackages.map((pkg: any) => { const next = `/booking/${pkg.tours?.slug}?package=${pkg.id}`; const min = Number(pkg.affiliate_min_price ?? 0); const max = Math.max(Number(pkg.affiliate_max_price ?? 0), Number(pkg.regular_price ?? 0)); return { id: pkg.id, tourTitle: pkg.tours?.title_th || "กิจกรรม", category: pkg.tours?.categories?.name_th || "อื่นๆ", packageName: pkg.name_th, image: pkg.tours?.cover_image || pkg.tours?.categories?.image, link: `${site}/ref/${partner.ref_code || partner.affiliate_code}?next=${encodeURIComponent(next)}`, code: `${partner.ref_code || partner.affiliate_code}-${pkg.id.slice(0, 6)}`, pricing: min && max ? { min, max, current: Number(priceMap.get(pkg.id) ?? min) } : undefined }; })} />
             {!shareablePackages.length && <p className="text-sm text-brand-text/55">ยังไม่มีแพ็กเกจที่เปิดรับพาร์ทเนอร์ กรุณาตั้งค่าค่าตอบแทนพาร์ทเนอร์ในหน้า Admin ของกิจกรรมนั้น</p>}
             <p className="mt-3 text-xs text-brand-text/50">
               แชร์ลิงก์นี้ให้ลูกค้า เมื่อมีคนเข้าเว็บผ่านลิงก์แล้วจอง ระบบจะบันทึกว่ามาจากคุณ
